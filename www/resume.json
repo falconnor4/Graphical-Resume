@@ -1,0 +1,31 @@
+{
+  "contact": {
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "linkedin": "linkedin.com/in/johndoe",
+    "github": "github.com/johndoe"
+  },
+  "summary": "A highly skilled graphics programmer with experience in Rust, WebGPU, and real-time rendering. Passionate about creating visually stunning and interactive experiences.",
+  "experience": [
+    {
+      "title": "Senior Graphics Engineer",
+      "company": "RenderCore Inc.",
+      "dates": "2020 - Present",
+      "description": "Led the development of a new real-time rendering engine using WebGPU. Focused on shader optimization and advanced lighting techniques."
+    },
+    {
+      "title": "Junior Software Engineer",
+      "company": "Poly-Perfect",
+      "dates": "2018 - 2020",
+      "description": "Contributed to the development of 3D modeling tools and plugins. Gained experience with C++ and OpenGL."
+    }
+  ],
+  "education": [
+    {
+      "degree": "B.S. in Computer Science",
+      "university": "University of Technology",
+      "dates": "2014 - 2018"
+    }
+  ],
+  "skills": ["Rust", "WebGPU", "GLSL", "Python", "C++", "JavaScript", "WASM"]
+}

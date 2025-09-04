@@ -1,0 +1,16 @@
+# Rust
+/target
+/pkg
+
+# Node
+/node_modules
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# General
+.DS_Store
+*.log
