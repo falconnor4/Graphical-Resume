@@ -1,31 +1,62 @@
 {
   "contact": {
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "linkedin": "linkedin.com/in/johndoe",
-    "github": "github.com/johndoe"
+    "name": "Connor Fallon",
+    "email": "connor@example.com",
+    "linkedin": "linkedin.com/in/connorfallon",
+    "github": "github.com/falconnor4",
+    "location": "San Francisco, CA"
   },
-  "summary": "A highly skilled graphics programmer with experience in Rust, WebGPU, and real-time rendering. Passionate about creating visually stunning and interactive experiences.",
+  "summary": "Full-stack software engineer with expertise in modern web technologies, systems programming, and interactive applications. Passionate about creating innovative user experiences and high-performance software.",
   "experience": [
     {
-      "title": "Senior Graphics Engineer",
-      "company": "RenderCore Inc.",
-      "dates": "2020 - Present",
-      "description": "Led the development of a new real-time rendering engine using WebGPU. Focused on shader optimization and advanced lighting techniques."
+      "title": "Senior Software Engineer",
+      "company": "Tech Innovations Inc.",
+      "dates": "2021 - Present",
+      "description": "Led development of real-time web applications using Rust, WebGPU, and modern JavaScript frameworks. Built interactive terminal interfaces and WebAssembly-based tools.",
+      "technologies": ["Rust", "WebGPU", "TypeScript", "React", "WebAssembly"]
     },
     {
-      "title": "Junior Software Engineer",
-      "company": "Poly-Perfect",
-      "dates": "2018 - 2020",
-      "description": "Contributed to the development of 3D modeling tools and plugins. Gained experience with C++ and OpenGL."
+      "title": "Full Stack Developer",
+      "company": "Digital Solutions Co.",
+      "dates": "2019 - 2021",
+      "description": "Developed scalable web applications and APIs. Implemented DevOps practices and maintained cloud infrastructure.",
+      "technologies": ["Python", "Node.js", "PostgreSQL", "AWS", "Docker"]
+    },
+    {
+      "title": "Software Developer Intern",
+      "company": "StartupTech",
+      "dates": "2018 - 2019",
+      "description": "Built web interfaces and contributed to mobile app development. Gained experience with modern development workflows and agile practices.",
+      "technologies": ["JavaScript", "React Native", "Git", "REST APIs"]
     }
   ],
   "education": [
     {
       "degree": "B.S. in Computer Science",
-      "university": "University of Technology",
-      "dates": "2014 - 2018"
+      "university": "University of California",
+      "dates": "2015 - 2019",
+      "gpa": "3.8/4.0",
+      "coursework": ["Data Structures", "Algorithms", "Computer Graphics", "Systems Programming"]
     }
   ],
-  "skills": ["Rust", "WebGPU", "GLSL", "Python", "C++", "JavaScript", "WASM"]
+  "skills": {
+    "languages": ["Rust", "Python", "JavaScript", "TypeScript", "C++", "Go"],
+    "web": ["React", "HTML/CSS", "WebAssembly", "WebGPU", "Node.js"],
+    "tools": ["Git", "Docker", "Linux", "AWS", "PostgreSQL", "MongoDB"],
+    "concepts": ["System Design", "Algorithms", "Graphics Programming", "Performance Optimization"]
+  },
+  "projects": [
+    {
+      "name": "Interactive Resume Terminal",
+      "description": "Built this interactive resume site with WebGPU graphics and Python integration",
+      "technologies": ["Rust", "WebGPU", "Pyodide", "WASM"],
+      "github": "github.com/falconnor4/rendered-resume"
+    },
+    {
+      "name": "Real-time Shader Playground",
+      "description": "WebGPU-based graphics application with custom shaders and interactive controls",
+      "technologies": ["WebGPU", "GLSL", "JavaScript"],
+      "demo": "example.com/shader-demo"
+    }
+  ]
 }

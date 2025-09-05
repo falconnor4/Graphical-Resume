@@ -19,7 +19,7 @@ pub struct State {
     device: wgpu::Device,
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
-    pub size: winit::dpi::PhysicalSize<u32>,
+    pub size: (u32, u32),
     render_pipelines: HashMap<String, wgpu::RenderPipeline>,
     active_pipeline: String,
     uniforms: Uniforms,
@@ -29,7 +29,8 @@ pub struct State {
 
 impl State {
     pub async fn new(canvas: HtmlCanvasElement) -> Self {
-        let size = winit::dpi::PhysicalSize::new(canvas.width(), canvas.height());
+        let size = (canvas.width(), canvas.height());
+        web_sys::console::log_2(&"Canvas size:".into(), &format!("{}x{}", size.0, size.1).into());
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::all(),
@@ -65,8 +66,8 @@ impl State {
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface_format,
-            width: size.width,
-            height: size.height,
+            width: size.0,
+            height: size.1,
             present_mode: surface_caps.present_modes[0],
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
@@ -77,7 +78,7 @@ impl State {
         let uniforms = Uniforms {
             time: 0.0,
             mouse: [0.0, 0.0],
-            resolution: [size.width as f32, size.height as f32],
+            resolution: [size.0 as f32, size.1 as f32],
             _padding1: [0; 3],
             _padding2: [0; 2],
             _padding3: [0; 2],
@@ -186,13 +187,13 @@ impl State {
         }
     }
 
-    pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
-        if new_size.width > 0 && new_size.height > 0 {
+    pub fn resize(&mut self, new_size: (u32, u32)) {
+        if new_size.0 > 0 && new_size.1 > 0 {
             self.size = new_size;
-            self.config.width = new_size.width;
-            self.config.height = new_size.height;
+            self.config.width = new_size.0;
+            self.config.height = new_size.1;
             self.surface.configure(&self.device, &self.config);
-            self.uniforms.resolution = [new_size.width as f32, new_size.height as f32];
+            self.uniforms.resolution = [new_size.0 as f32, new_size.1 as f32];
         }
     }
 

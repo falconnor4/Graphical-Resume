@@ -1,50 +1,94 @@
-// Ice/Water shader adapted from Shadertoy
-// https://www.shadertoy.com/view/Xtl3RX
+// Crystal ice shader with refractions and caustics
 
 struct Uniforms {
-    [[location(0)]] time: f32;
-    [[location(1)]] mouse: vec2<f32>;
-    [[location(2)]] resolution: vec2<f32>;
-};
-[[group(0), binding(0)]] var<uniform> uniforms: Uniforms;
-
-fn random(st: vec2<f32>) -> f32 {
-    return fract(sin(dot(st.xy, vec2<f32>(12.9898, 78.233))) * 43758.5453123);
+    time: f32,
+    _padding1: array<u32, 3>,
+    mouse: vec2<f32>,
+    _padding2: array<u32, 2>,
+    resolution: vec2<f32>,
+    _padding3: array<u32, 2>,
 }
 
-fn noise(st: vec2<f32>) -> f32 {
-    let i = floor(st);
-    let f = fract(st);
+@group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
-    let a = random(i);
-    let b = random(i + vec2<f32>(1.0, 0.0));
-    let c = random(i + vec2<f32>(0.0, 1.0));
-    let d = random(i + vec2<f32>(1.0, 1.0));
+fn hash(p: vec2<f32>) -> f32 {
+    var p3 = fract(vec3<f32>(p.xyx) * 0.1031);
+    p3 = p3 + dot(p3, p3.yzx + 19.19);
+    return fract((p3.x + p3.y) * p3.z);
+}
 
+fn noise(p: vec2<f32>) -> f32 {
+    let i = floor(p);
+    let f = fract(p);
     let u = f * f * (3.0 - 2.0 * f);
-    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+    return mix(
+        mix(hash(i + vec2<f32>(0.0, 0.0)), hash(i + vec2<f32>(1.0, 0.0)), u.x),
+        mix(hash(i + vec2<f32>(0.0, 1.0)), hash(i + vec2<f32>(1.0, 1.0)), u.x),
+        u.y
+    );
 }
 
-fn fbm(st: vec2<f32>) -> f32 {
-    var value = 0.0;
-    var amplitude = 0.5;
-    var p = st;
-
-    for (var i = 0; i < 6; i = i + 1) {
-        value = value + amplitude * noise(p);
-        p = p * 2.0;
-        amplitude = amplitude * 0.5;
+fn voronoi(p: vec2<f32>) -> vec2<f32> {
+    let n = floor(p);
+    let f = fract(p);
+    
+    var mr = 8.0;
+    var mg = vec2<f32>(0.0);
+    
+    for (var j = -1; j <= 1; j = j + 1) {
+        for (var i = -1; i <= 1; i = i + 1) {
+            let g = vec2<f32>(f32(i), f32(j));
+            let o = hash(n + g) * vec2<f32>(sin(uniforms.time * 0.3), cos(uniforms.time * 0.5));
+            let r = g + o - f;
+            let d = dot(r, r);
+            
+            if (d < mr) {
+                mr = d;
+                mg = r;
+            }
+        }
     }
-    return value;
+    
+    return vec2<f32>(sqrt(mr), mg.x);
 }
 
-[[stage(fragment)]]
-fn main([[builtin(position)]] frag_coord: vec4<f32>) -> [[location(0)]] vec4<f32> {
-    let uv = frag_coord.xy / uniforms.resolution.xy;
-    let t = uniforms.time * 0.1;
-
-    let f = fbm(uv + vec2<f32>(t, 0.0));
-    let color = vec3<f32>(0.0, 0.1, 0.6 + f * 0.4);
-
+@fragment
+fn main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
+    var uv = frag_coord.xy / uniforms.resolution.xy;
+    uv = uv * 2.0 - 1.0;
+    uv.x = uv.x * (uniforms.resolution.x / uniforms.resolution.y);
+    
+    let time = uniforms.time * 0.2;
+    
+    // Create ice crystal pattern using Voronoi
+    let scale = 6.0 + 2.0 * sin(time);
+    let vor = voronoi(uv * scale + vec2<f32>(time, time * 0.7));
+    
+    // Crystal edges
+    let edge = smoothstep(0.0, 0.1, vor.x);
+    let crystal = 1.0 - edge;
+    
+    // Add some noise for texture
+    let n1 = noise(uv * 15.0 + vec2<f32>(time * 2.0, time));
+    let n2 = noise(uv * 30.0 - vec2<f32>(time, time * 1.5));
+    let texture_noise = n1 * 0.7 + n2 * 0.3;
+    
+    // Ice blue colors with caustics
+    let caustic = sin(vor.x * 20.0 + time * 5.0) * 0.5 + 0.5;
+    let blue_tint = vec3<f32>(0.6, 0.8, 1.0);
+    let cyan_tint = vec3<f32>(0.4, 0.9, 1.0);
+    
+    var color = mix(blue_tint, cyan_tint, caustic);
+    color = color * (0.5 + 0.5 * texture_noise);
+    color = color * (0.3 + 0.7 * crystal);
+    
+    // Add sparkle effect
+    let sparkle = smoothstep(0.98, 1.0, texture_noise) * crystal;
+    color = color + vec3<f32>(sparkle * 0.8);
+    
+    // Fade to darker blue at edges
+    let vignette = 1.0 - length(uv * 0.5);
+    color = color * (0.4 + 0.6 * vignette);
+    
     return vec4<f32>(color, 1.0);
 }

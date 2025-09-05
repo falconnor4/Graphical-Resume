@@ -1,12 +1,15 @@
-// Fire shader adapted from Shadertoy
-// https://www.shadertoy.com/view/4dsGW2
+// Plasma fire shader with flowing energy
 
 struct Uniforms {
-    [[location(0)]] time: f32;
-    [[location(1)]] mouse: vec2<f32>;
-    [[location(2)]] resolution: vec2<f32>;
-};
-[[group(0), binding(0)]] var<uniform> uniforms: Uniforms;
+    time: f32,
+    _padding1: array<u32, 3>,
+    mouse: vec2<f32>,
+    _padding2: array<u32, 2>,
+    resolution: vec2<f32>,
+    _padding3: array<u32, 2>,
+}
+
+@group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
 fn hash(p: vec2<f32>) -> f32 {
     let p3 = fract(vec3<f32>(p.xyx) * 0.1031);
@@ -19,40 +22,62 @@ fn noise(p: vec2<f32>) -> f32 {
     let f = fract(p);
     let u = f * f * (3.0 - 2.0 * f);
 
-    return mix(mix(hash(i + vec2<f32>(0.0, 0.0)),
-                   hash(i + vec2<f32>(1.0, 0.0)), u.x),
-               mix(hash(i + vec2<f32>(0.0, 1.0)),
-                   hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);
+    return mix(
+        mix(hash(i + vec2<f32>(0.0, 0.0)), hash(i + vec2<f32>(1.0, 0.0)), u.x),
+        mix(hash(i + vec2<f32>(0.0, 1.0)), hash(i + vec2<f32>(1.0, 1.0)), u.x),
+        u.y
+    );
 }
 
 fn fbm(p: vec2<f32>) -> f32 {
-    var f: f32 = 0.0;
-    let m = mat2x2<f32>(vec2<f32>(0.8,  0.6), vec2<f32>(-0.6,  0.8));
-
-    f = f + 0.5000 * noise(p); p = m * p * 2.02;
-    f = f + 0.2500 * noise(p); p = m * p * 2.03;
-    f = f + 0.1250 * noise(p); p = m * p * 2.01;
-    f = f + 0.0625 * noise(p);
-    return f / 0.9375;
+    var value = 0.0;
+    var amplitude = 0.5;
+    var frequency = 1.0;
+    var pos = p;
+    
+    for (var i = 0; i < 5; i = i + 1) {
+        value = value + amplitude * noise(pos);
+        pos = pos * 2.0;
+        amplitude = amplitude * 0.5;
+        frequency = frequency * 2.0;
+    }
+    
+    return value;
 }
 
-[[stage(fragment)]]
-fn main([[builtin(position)]] frag_coord: vec4<f32>) -> [[location(0)]] vec4<f32> {
+@fragment
+fn main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
     var uv = frag_coord.xy / uniforms.resolution.xy;
+    uv = uv * 2.0 - 1.0;
     uv.x = uv.x * (uniforms.resolution.x / uniforms.resolution.y);
 
-    var q = uv;
-    q.x = q.x * 2.0 - 0.5;
-    q.y = q.y * 2.0 - 1.0;
-
-    let t = uniforms.time * 0.5;
-    let fire_uv = vec2<f32>(q.x, q.y + t);
-
-    let f = fbm(fire_uv * 3.0);
-
-    var c = vec3<f32>(1.0, 0.5, 0.1) * f;
-    c = c * (1.0 - uv.y); // Fade to black at the top
-    c = smoothstep(vec3<f32>(0.0), vec3<f32>(1.0), c);
-
-    return vec4<f32>(c, 1.0);
+    // Flowing fire effect
+    let time = uniforms.time * 0.8;
+    var noise_uv = vec2<f32>(uv.x * 2.0, uv.y * 3.0 + time);
+    
+    let n1 = fbm(noise_uv);
+    let n2 = fbm(noise_uv * 2.0 + vec2<f32>(1.7, 9.2));
+    let n3 = fbm(noise_uv * 4.0 + vec2<f32>(8.3, 2.8));
+    
+    let turbulence = n1 + 0.5 * n2 + 0.25 * n3;
+    
+    // Create fire-like gradient
+    let flame_height = 1.0 + 0.5 * turbulence - uv.y * 1.5;
+    let flame_intensity = max(0.0, flame_height);
+    
+    // Color mapping for fire
+    var color = vec3<f32>(0.0);
+    if (flame_intensity > 0.0) {
+        let hot = smoothstep(0.0, 0.8, flame_intensity);
+        let very_hot = smoothstep(0.5, 1.0, flame_intensity);
+        
+        color = vec3<f32>(1.0, hot * 0.8, very_hot * 0.2);
+        color = color * flame_intensity;
+    }
+    
+    // Add some orange and red variations
+    color.r = color.r + 0.3 * sin(time + uv.x * 3.0);
+    color.g = color.g * (0.7 + 0.3 * cos(time * 0.7 + uv.y * 2.0));
+    
+    return vec4<f32>(color, 1.0);
 }
