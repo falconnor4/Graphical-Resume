@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(wasm-pack build:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

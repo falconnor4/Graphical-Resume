@@ -1,4 +1,4 @@
-import init, { run_command, set_shader } from '../pkg/rendered_resume.js';
+import init, { run_command, set_shader } from './pkg/rendered_resume.js';
 
 // Global state
 let terminal = null;

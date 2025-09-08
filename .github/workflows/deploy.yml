@@ -1,0 +1,82 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+    
+    - name: Install wasm-pack
+      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+    
+    - name: Cache Rust dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+    
+    - name: Build WebAssembly
+      run: wasm-pack build --target web --release
+    
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+    
+    - name: Prepare deployment directory
+      run: |
+        # Copy www directory contents to _site
+        cp -r www/ _site/
+        
+        # Copy the built WASM files to the pkg directory in _site
+        mkdir -p _site/pkg
+        cp -r pkg/* _site/pkg/
+        
+        # Add proper MIME type headers for WASM files
+        echo 'AddType application/wasm .wasm' > _site/.htaccess
+        
+        # Ensure .nojekyll exists to prevent Jekyll processing
+        touch _site/.nojekyll
+        
+        # Ensure all necessary files are present
+        ls -la _site/
+        ls -la _site/pkg/
+    
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
