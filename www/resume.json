@@ -3,9 +3,8 @@
     "name": "Connor Brown",
     "title": "Graphics Programmer & Game Developer",
     "email": "falconnor4@gmail.com",
-    "linkedin": "linkedin.com/in/connor-brown-dev",
-    "github": "github.com/falconnor4",
-    "location": "Vancouver, BC"
+    "location": "Vancouver, BC V6P 3S7",
+    "phone": "+1 778 251 0034"
   },
   "sections": {
     "summary": {
@@ -14,13 +13,13 @@
       "enabled": true
     },
     "experience": {
-      "title": "Experience", 
+      "title": "Experience",
       "icon": "💼",
       "enabled": true
     },
     "projects": {
       "title": "Projects",
-      "icon": "🚀", 
+      "icon": "🚀",
       "enabled": true
     },
     "skills": {
@@ -29,68 +28,110 @@
       "enabled": true,
       "categories": {
         "languages": "Programming Languages",
-        "web": "Web Technologies", 
-        "tools": "Tools & Platforms",
-        "concepts": "Core Concepts"
+        "tools": "Game Engines & Tools",
+        "software_development": "Software Development",
+        "other": "Other Skills",
+        "strengths": "Core Strengths"
       }
     },
     "education": {
       "title": "Education",
       "icon": "🎓",
       "enabled": true
+    },
+    "certifications": {
+      "title": "Certifications & Licences",
+      "icon": "📜",
+      "enabled": true
     }
   },
-  "summary": "A versatile and motivated programmer with 3 years of professional experience in software and game development. Currently contributing as a programmer at Studio Todos while pursuing a Bachelor's in Computer Science at BCIT. Known for bringing a positive, team-oriented attitude and a knack for troubleshooting complex technical issues. Eager to apply a broad technical skillset to solve new challenges and contribute to innovative projects.",
+  "summary": "A versatile and motivated programmer with 3 years of professional experience in software and game development. Currently contributing as a programmer at Studio Todos while pursuing a Bachelor's in Computer Science at BCIT. Known for bringing a positive, team-oriented attitude and a knack for troubleshooting complex technical issues. Eager to apply a broad technical skillset to solve new challenges and contribute to innovative projects. Portfolio available on GitHub: https://github.com/falconnor4.",
   "experience": [
     {
       "title": "Graphics Programmer",
       "company": "Studio Todos",
       "dates": "February 2025 - Present",
-      "description": "Working as a lead graphics programmer developing novel view synthesis and experimental baked lighting techniques. Collaborating with the team to push the boundaries of real-time rendering and visual effects.",
+      "description": "I work as a lead graphics programmer at studio Todos. My work involves novel view synthesis and experimental baked lighting techniques.",
       "technologies": ["C++", "GLSL", "Graphics Programming", "Real-time Rendering", "Lighting Systems"]
     },
     {
       "title": "General Programmer",
       "company": "Crystal Blue Studios",
       "dates": "September 2023 - March 2024",
-      "description": "Worked as a general programmer contributing to various game development projects including SCP: Enigma. Gained experience in game systems programming and collaborative development workflows.",
+      "description": "I worked as a general programmer for crystal blue studios. Working on titles such as SCP: Enigma.",
       "technologies": ["C++", "Unity", "Game Development", "Version Control"]
-    },
-    {
-      "title": "Art Technology Collaborator",
-      "company": "Vancouver Art Gallery",
-      "dates": "2023",
-      "description": "Collaborated with the Vancouver Art Gallery on their British Properties art piece, providing technical expertise and programming support for interactive digital art installations.",
-      "technologies": ["Interactive Media", "Digital Art", "Technical Programming"]
     }
   ],
   "education": [
     {
       "degree": "Bachelor's in Computer Science",
-      "university": "British Columbia Institute of Technology (BCIT)",
+      "university": "British Columbia Institute of Technology",
       "dates": "December 2024 - Present",
-      "gpa": "In Progress",
+      "description": "Currently enrolled at the computer systems technology program at BCIT. Where I work on computer programming and software architecture.",
       "coursework": ["Computer Programming", "Software Architecture", "Data Structures", "System Design"]
     }
   ],
   "skills": {
-    "languages": ["C", "C++", "Rust", "GLSL", "Python", "JavaScript"],
-    "web": ["HTML/CSS", "WebGPU", "WebAssembly", "Modern JavaScript"],
-    "tools": ["Unity", "Unreal Engine", "Blender", "Git", "Visual Studio", "Linux"],
-    "concepts": ["Graphics Programming", "Game Development", "Software Architecture", "Problem Solving", "Team Collaboration"]
+    "languages": ["C", "C++", "Rust", "GLSL"],
+    "tools": ["Unity", "Unreal Engine", "Blender"],
+    "software_development": ["Software Development - 4 years", "C - 4 years", "Rust (programming language) - 2 years", "GLSL (programming language) - 2 years"],
+    "other": ["Teaching", "Computer repair", "Classroom Management", "Experience with Children", "Public Speaking", "Math"],
+    "strengths": ["Excellent teamwork and communication abilities", "Proven experience in creative problem-solving and delegation", "Strong passion for game design and development"]
   },
   "projects": [
     {
       "name": "Interactive Resume Terminal",
       "description": "Built this interactive resume site with WebGPU shaders, terminal interface, and Python integration featuring Mandelbrot fractals and dynamic effects",
-      "technologies": ["Rust", "WebGPU", "WGSL", "JavaScript", "Pyodide"],
+      "technologies": [
+        "Rust",
+        "WebGPU",
+        "WGSL",
+        "JavaScript",
+        "Pyodide"
+      ],
       "github": "github.com/falconnor4/rendered-resume"
     },
     {
       "name": "Game Development Portfolio",
       "description": "Collection of game projects and technical demos showcasing graphics programming and engine development skills",
-      "technologies": ["C++", "Unity", "Unreal Engine", "GLSL"],
+      "technologies": [
+        "C++",
+        "Unity",
+        "Unreal Engine",
+        "GLSL"
+      ],
       "github": "github.com/falconnor4"
+    },
+    {
+      "name": "Vancouver Art Gallery Installation",
+      "description": "Did some vector processing in order for them to build the installation.",
+      "technologies": [
+        "Vector Processing",
+        "Interactive Media",
+        "Digital Art"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "name": "HPGG03",
+      "date": "Present",
+      "description": "General video game programming certificate via Hewlett-Packard"
+    },
+    {
+      "name": "CSE167x",
+      "date": "March 2025 - Present",
+      "description": "UC San Diego's Computer graphics and HLSL certificate course for developers."
+    },
+    {
+      "name": "HPGG02",
+      "date": "December 2024 - Present",
+      "description": "Certified in Game Design and Development through Hewlett-Packard’s professional training program."
+    },
+    {
+      "name": "First Aid & CPR Level C",
+      "date": "February 2022 - February 2025",
+      "description": "Standard First Aid CPR/AED Level C (Blended)"
     }
   ]
 }
