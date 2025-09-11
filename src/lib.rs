@@ -48,7 +48,8 @@ pub async fn start() {
         canvas_clone.set_height(height);
         
         RENDER_STATE.with(|cell| {
-            if let Some(state) = cell.borrow_mut().as_mut() {
+            let mut borrow = cell.borrow_mut();
+            if let Some(state) = borrow.as_mut() {
                 state.resize((width, height));
             }
         });
@@ -73,7 +74,8 @@ pub async fn start() {
 
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move |time: f64| {
         RENDER_STATE.with(|state_cell| {
-            if let Some(state) = state_cell.borrow_mut().as_mut() {
+            let mut borrow = state_cell.borrow_mut();
+            if let Some(state) = borrow.as_mut() {
                 state.update(time as f32 / 1000.0, *mouse_pos.borrow());
                 match state.render() {
                     Ok(_) => {}
@@ -117,7 +119,8 @@ async fn fetch_resume_data() -> Result<String, JsValue> {
 #[wasm_bindgen]
 pub fn set_shader(name: String) {
     RENDER_STATE.with(|cell| {
-        if let Some(state) = cell.borrow_mut().as_mut() {
+        let mut borrow = cell.borrow_mut();
+        if let Some(state) = borrow.as_mut() {
             state.set_pipeline(&name);
         }
     });

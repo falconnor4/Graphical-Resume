@@ -5,11 +5,13 @@ use wgpu::util::DeviceExt;
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 struct Uniforms {
     time: f32,
-    _padding1: [u32; 3], // Pad to align with WGSL
+    _padding1: [f32; 3], // Pad to align with WGSL
     mouse: [f32; 2],
-    _padding2: [u32; 2],
+    _padding2: [f32; 2],
     resolution: [f32; 2],
-    _padding3: [u32; 2],
+    _padding3: [f32; 2],
+    _extra_padding1: [f32; 4],
+    _extra_padding2: [f32; 4],
 }
 
 use std::collections::HashMap;
@@ -53,7 +55,7 @@ impl State {
                 &wgpu::DeviceDescriptor {
                     label: None,
                     required_features: wgpu::Features::empty(),
-                    required_limits: wgpu::Limits::default(),
+                    required_limits: wgpu::Limits::downlevel_webgl2_defaults(),
                 },
                 None,
             )
@@ -61,14 +63,19 @@ impl State {
             .unwrap();
 
         let surface_caps = surface.get_capabilities(&adapter);
-        let surface_format = surface_caps.formats[0];
+        let surface_format = surface_caps
+            .formats
+            .iter()
+            .copied()
+            .find(|f| f.is_srgb())
+            .unwrap_or(surface_caps.formats[0]);
 
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface_format,
             width: size.0,
             height: size.1,
-            present_mode: surface_caps.present_modes[0],
+            present_mode: surface_caps.present_modes.iter().copied().find(|&p| p == wgpu::PresentMode::Mailbox).unwrap_or(wgpu::PresentMode::Fifo),
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
@@ -79,9 +86,11 @@ impl State {
             time: 0.0,
             mouse: [0.0, 0.0],
             resolution: [size.0 as f32, size.1 as f32],
-            _padding1: [0; 3],
-            _padding2: [0; 2],
-            _padding3: [0; 2],
+            _padding1: [0.0; 3],
+            _padding2: [0.0; 2],
+            _padding3: [0.0; 2],
+            _extra_padding1: [0.0; 4],
+            _extra_padding2: [0.0; 4],
         };
 
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {

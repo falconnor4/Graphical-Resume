@@ -2,11 +2,13 @@
 
 struct Uniforms {
     time: f32,
-    _padding1: array<u32, 3>,
+    _padding1: vec3<f32>,
     mouse: vec2<f32>,
-    _padding2: array<u32, 2>,
+    _padding2: vec2<f32>,
     resolution: vec2<f32>,
-    _padding3: array<u32, 2>,
+    _padding3: vec2<f32>,
+    _extra_padding1: vec4<f32>,
+    _extra_padding2: vec4<f32>,
 }
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;

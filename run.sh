@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Resume Site Runner Script
 echo "🚀 Building and running your resume site..."
 
@@ -12,14 +14,16 @@ fi
 
 # Build the WebAssembly module
 echo "🔧 Building WebAssembly module..."
-if ! wasm-pack build --target web; then
+if ! wasm-pack build --target web --no-opt; then
     echo "❌ Build failed!"
     exit 1
 fi
 
 # Copy built files to www directory
 echo "📦 Copying files to www directory..."
-cp -r pkg/* www/pkg/
+ls -l pkg
+mkdir -p www/pkg
+cp -r pkg/. www/pkg/
 
 # Find an available port
 PORT=8000
