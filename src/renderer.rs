@@ -5,7 +5,9 @@ use wgpu::util::DeviceExt;
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 struct Uniforms {
     time: f32,
-    _padding1: [f32; 3], // Pad to align with WGSL
+    _pad0: [u32; 3],
+    _padding1: [f32; 3],
+    _pad1: [u32; 1],
     mouse: [f32; 2],
     _padding2: [f32; 2],
     resolution: [f32; 2],
@@ -89,7 +91,9 @@ impl State {
             time: 0.0,
             mouse: [0.0, 0.0],
             resolution: [size.0 as f32, size.1 as f32],
+            _pad0: [0; 3],
             _padding1: [0.0; 3],
+            _pad1: [0; 1],
             _padding2: [0.0; 2],
             _padding3: [0.0; 2],
             _extra_padding1: [0.0; 4],
