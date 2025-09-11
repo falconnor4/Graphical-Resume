@@ -1,12 +1,10 @@
-import init, { run_command, set_shader } from './pkg/rendered_resume.js';
+import init, { run_command, set_shader, get_active_shader } from './pkg/rendered_resume.js';
 
 // --- Global State ---
 let terminal = null;
 let fitAddon = null;
 let pyodide = null;
 let game = null;
-let currentShader = 0;
-const shaders = ['default', 'fire', 'ice'];
 
 // --- Resume Loading ---
 async function loadResumeContent() {
@@ -258,158 +256,42 @@ let commandHistory = [];
 let historyIndex = -1;
 let currentCommand = "";
 
-const commands = {
-    'help': {
-        description: 'Show this help message',
-        execute: () => {
-            const commandList = Object.entries(commands)
-                .map(([name, { description }]) => `  ${name.padEnd(15)} - ${description}`)
-                .join('\r\n');
-            return `Available commands:\r\n${commandList}`;
-        }
-    },
-    'about': {
-        description: 'About this resume site',
-        execute: () => `
-🚀 Interactive Resume Terminal
-This is a portfolio website built with:
-- WebGPU/WebGL shaders for animated backgrounds
-- Interactive terminal with Python runtime (Pyodide)
-- Snake game and Python games
-- Responsive design for all devices`
-    },
-    'contact': {
-        description: 'Show contact information',
-        execute: async () => {
-            const r = await (await fetch('./resume.json')).json();
-            return `
-📧 Contact Information:
-- Email: ${r.contact.email}
-- LinkedIn: ${r.contact.linkedin}
-- GitHub: ${r.contact.github}
-- Location: ${r.contact.location}`;
-        }
-    },
-    'skills': {
-        description: 'List technical skills',
-        execute: async () => {
-            const r = await (await fetch('./resume.json')).json();
-            return `
-🛠️ Technical Skills:
-- Languages: ${r.skills.languages.join(', ')}
-- Web: ${r.skills.web.join(', ')}
-- Tools: ${r.skills.tools.join(', ')}
-- Concepts: ${r.skills.concepts.join(', ')}`;
-        }
-    },
-    'clear': {
-        description: 'Clear terminal',
-        execute: () => {
-            terminal.clear();
-            return null;
-        }
-    },
-    'echo': {
-        description: 'Echo text back',
-        execute: (args) => args.join(' ') || 'echo: missing argument'
-    },
-    'date': {
-        description: 'Show current date/time',
-        execute: () => new Date().toString()
-    },
-    'whoami': {
-        description: 'Show current user info',
-        execute: () => 'visitor@rendered-resume.dev'
-    },
-    'ls': {
-        description: 'List available "files"',
-        execute: () => `
-resume.json    contact.txt    skills.md    projects/
-about.txt      portfolio/     games/       shaders/`
-    },
-    'cat': {
-        description: 'Show file contents (e.g., cat about.txt)',
-        execute: (args) => {
-            const file = args[0];
-            if (!file) return 'cat: missing filename';
-            switch (file) {
-                case 'resume.json': return 'Use the main page to view the resume.';
-                case 'contact.txt': return commands.contact.execute();
-                case 'about.txt': return commands.about.execute();
-                case 'skills.md': return commands.skills.execute();
-                default: return `cat: ${file}: No such file or directory`;
-            }
-        }
-    },
-    'shader': {
-        description: 'Change background shader (e.g., shader fire)',
-        execute: (args) => {
-            const shaderName = args[0];
-            if (shaders.includes(shaderName)) {
-                set_shader(shaderName);
-                return `Shader set to: ${shaderName}`;
-            }
-            return `Invalid shader. Available: ${shaders.join(', ')}`;
-        }
-    },
-    'python-games': {
-        description: 'Launch Python game collection',
-        execute: async () => {
-            if (!pyodide) return "Python runtime not loaded yet. Please wait...";
-            terminal.writeln("Loading Python game collection...");
-            try {
-                const response = await fetch('./pygame.py');
-                const gameCode = await response.text();
-                pyodide.runPython(gameCode);
-                return "Python games loaded. See terminal for instructions.";
-            } catch (error) {
-                return "Error loading Python games: " + error.message;
-            }
-        }
-    },
-    'python': {
-        description: 'Execute Python code (e.g., python print("hello"))',
-        execute: async (args) => {
-            const code = args.join(' ');
-            if (!code) return "Usage: python <code>";
-            if (!pyodide) return "Python runtime not loaded yet. Please wait...";
-            try {
-                pyodide.globals.set('code_to_run', code);
-                let output = await pyodide.runPythonAsync(`
-                    import sys, io
-                    sys.stdout = io.StringIO()
-                    exec(code_to_run)
-                    sys.stdout.getvalue()
-                `);
-                return output.trim();
-            } catch (e) {
-                return `Python Error: ${e.message}`;
-            }
-        }
-    },
-};
-
 async function handleCommand(commandStr) {
-    const parts = commandStr.trim().split(' ');
-    const cmdName = parts[0].toLowerCase();
-    const args = parts.slice(1);
-
     if (commandHistory[commandHistory.length - 1] !== commandStr) {
         commandHistory.push(commandStr);
     }
     historyIndex = commandHistory.length;
 
-    if (cmdName in commands) {
-        try {
-            const output = await commands[cmdName].execute(args);
-            if (output) {
-                terminal.writeln(output.replace(/\n/g, '\r\n'));
+    const output = await run_command(commandStr);
+    if (output) {
+        if (output.startsWith('__SET_SHADER__:')) {
+            const shaderName = output.split(':')[1];
+            set_shader(shaderName);
+            terminal.writeln(`Switched to shader: ${shaderName}`);
+        } else if (output === '__CLEAR__') {
+            terminal.clear();
+        } else if (output === '__START_GAME__') {
+            startSnakeGame();
+        } else if (output === '__RUN_PYTHON_GAMES__') {
+            if (!pyodide) {
+                terminal.writeln("Python runtime not loaded yet. Please wait...");
+            } else {
+                terminal.writeln("Loading Python game collection...");
+                try {
+                    const response = await fetch('./pygame.py');
+                    const gameCode = await response.text();
+                    pyodide.runPython(gameCode);
+                    terminal.writeln("Python games loaded. See terminal for instructions.");
+                } catch (error) {
+                    terminal.writeln("Error loading Python games: " + error.message);
+                }
             }
-        } catch (error) {
-            terminal.writeln(`Error: ${error.message}`);
+        } else if (output === '__SHOW_RESUME__') {
+            // This is not handled yet.
         }
-    } else {
-        terminal.writeln(`${cmdName}: command not found`);
+        else {
+            terminal.writeln(output.replace(/\n/g, '\r\n'));
+        }
     }
 }
 
@@ -450,13 +332,13 @@ function initTopTerminal() {
         terminal.write(prompt + currentCommand);
     });
 
-    terminal.onKey(({ key, domEvent }) => {
+    terminal.onKey(async ({ key, domEvent }) => {
         const printable = !domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey;
 
         if (domEvent.keyCode === 13) { // Enter
             terminal.write('\r\n');
             if (currentCommand.length > 0) {
-                handleCommand(currentCommand);
+                await handleCommand(currentCommand);
                 currentCommand = '';
             }
             terminal.write(prompt);
@@ -559,11 +441,6 @@ window.playPythonGames = function() {
     handleCommand('python-games');
 };
 
-window.changeShader = function() {
-    currentShader = (currentShader + 1) % shaders.length;
-    set_shader(shaders[currentShader]);
-    // ... (notification logic)
-};
 window.closeGame = function() {
     if (game) game.running = false;
     document.getElementById('game-display').style.display = 'none';
@@ -661,6 +538,25 @@ function gameOver(game) {
     game.ctx.fillText('Game Over!', game.canvas.width / 2, game.canvas.height / 2);
     game.ctx.fillText(`Score: ${game.score}`, game.canvas.width / 2, game.canvas.height / 2 + 30);
 }
+
+window.setup_shader_switcher = (names) => {
+    const select = document.getElementById('shader-select');
+    if (!select) return;
+
+    select.innerHTML = '';
+    for (const name of names) {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+    }
+
+    select.style.display = 'block';
+
+    select.addEventListener('change', (event) => {
+        set_shader(event.target.value);
+    });
+};
 
 // --- Main Application Initialization ---
 async function main() {

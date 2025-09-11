@@ -1,6 +1,8 @@
 use web_sys::HtmlCanvasElement;
 use wgpu::util::DeviceExt;
 
+include!(concat!(env!("OUT_DIR"), "/shaders.rs"));
+
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 struct Uniforms {
@@ -146,13 +148,7 @@ impl State {
             source: wgpu::ShaderSource::Wgsl(include_str!("shader.vs.wgsl").into()),
         });
 
-        let shader_sources = [
-            ("default", include_str!("shader.fs.wgsl")),
-            ("fire", include_str!("shader_fire.fs.wgsl")),
-            ("ice", include_str!("shader_ice.fs.wgsl")),
-        ];
-
-        for (name, source) in shader_sources.iter() {
+        for (name, source) in SHADER_SOURCES.iter() {
             let fs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: Some(&format!("{} Fragment Shader", name)),
                 source: wgpu::ShaderSource::Wgsl((*source).into()),
@@ -186,6 +182,13 @@ impl State {
             render_pipelines.insert(name.to_string(), pipeline);
         }
 
+        let mut shader_names: Vec<String> = render_pipelines.keys().cloned().collect();
+        shader_names.sort();
+        let active_pipeline = shader_names.first().cloned().unwrap_or_default();
+        
+        web_sys::console::log_2(&"Available shaders:".into(), &format!("{:?}", shader_names).into());
+        web_sys::console::log_2(&"Default shader set to:".into(), &active_pipeline.into());
+
         Self {
             surface,
             device,
@@ -193,7 +196,7 @@ impl State {
             config,
             size,
             render_pipelines,
-            active_pipeline: "default".to_string(),
+            active_pipeline,
             uniforms,
             uniform_buffer,
             uniform_bind_group,
@@ -260,5 +263,15 @@ impl State {
         output.present();
 
         Ok(())
+    }
+
+    pub fn get_shader_names(&self) -> Vec<String> {
+        let mut names: Vec<String> = self.render_pipelines.keys().cloned().collect();
+        names.sort();
+        names
+    }
+
+    pub fn get_active_shader(&self) -> String {
+        self.active_pipeline.clone()
     }
 }

@@ -5,7 +5,8 @@
       "Bash(chmod:*)",
       "Bash(mkdir:*)",
       "Bash(python3:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(cargo:*)"
     ],
     "deny": [],
     "ask": []
