@@ -143,12 +143,19 @@ impl State {
             });
 
         let mut render_pipelines = HashMap::new();
+
+        let vs_source = SHADER_SOURCES
+            .iter()
+            .find(|(name, _)| *name == "vs")
+            .map(|(_, source)| *source)
+            .expect("vs.wgsl not found");
+
         let vs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Vertex Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shader.vs.wgsl").into()),
+            source: wgpu::ShaderSource::Wgsl(vs_source.into()),
         });
 
-        for (name, source) in SHADER_SOURCES.iter() {
+        for (name, source) in SHADER_SOURCES.iter().filter(|(name, _)| *name != "vs") {
             let fs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: Some(&format!("{} Fragment Shader", name)),
                 source: wgpu::ShaderSource::Wgsl((*source).into()),
@@ -187,7 +194,7 @@ impl State {
         let active_pipeline = shader_names.first().cloned().unwrap_or_default();
         
         web_sys::console::log_2(&"Available shaders:".into(), &format!("{:?}", shader_names).into());
-        web_sys::console::log_2(&"Default shader set to:".into(), &active_pipeline.into());
+        web_sys::console::log_2(&"Default shader set to:".into(), &active_pipeline.clone().into());
 
         Self {
             surface,
