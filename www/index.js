@@ -18,9 +18,6 @@ async function loadResumeContent() {
         }
         
         const resume = await response.json();
-        console.log('Loaded resume data:', resume);
-        console.log('Resume sections:', resume.sections);
-        
         const content = document.getElementById('resume-content');
         
         // Build sections dynamically - only from JSON
@@ -46,12 +43,15 @@ async function loadResumeContent() {
         
         // Experience Section
         if (sections.experience && sections.experience.enabled && resume.experience && resume.experience.length > 0) {
+            const visibleExperiences = resume.experience.slice(0, 2);
+            const hiddenExperiences = resume.experience.slice(2);
+            
             sectionsHTML += `
                 <div class="section">
                     <div class="section-title">
                         <span>${sections.experience.icon}</span> ${sections.experience.title}
                     </div>
-                    ${resume.experience.map(exp => `
+                    ${visibleExperiences.map(exp => `
                         <div class="experience-item">
                             <div class="item-title">${exp.title}</div>
                             <div class="item-company">${exp.company} • ${exp.dates}</div>
@@ -61,18 +61,41 @@ async function loadResumeContent() {
                             </div>
                         </div>
                     `).join('')}
+                    ${hiddenExperiences.length > 0 ? `
+                        <div class="expand-section">
+                            <div class="expand-controls" onclick="toggleSection('experience')">
+                                <span class="expand-text">expand</span>
+                                <span class="section-arrow">→</span>
+                            </div>
+                            <div class="collapsible-content" id="experience-content" style="display: none;">
+                                ${hiddenExperiences.map(exp => `
+                                    <div class="experience-item">
+                                        <div class="item-title">${exp.title}</div>
+                                        <div class="item-company">${exp.company} • ${exp.dates}</div>
+                                        <div class="item-description">${exp.description}</div>
+                                        <div class="tech-tags">
+                                            ${exp.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }
         
         // Projects Section  
         if (sections.projects && sections.projects.enabled && resume.projects && resume.projects.length > 0) {
+            const visibleProjects = resume.projects.slice(0, 2);
+            const hiddenProjects = resume.projects.slice(2);
+            
             sectionsHTML += `
                 <div class="section">
                     <div class="section-title">
                         <span>${sections.projects.icon}</span> ${sections.projects.title}
                     </div>
-                    ${resume.projects.map(proj => `
+                    ${visibleProjects.map(proj => `
                         <div class="project-item">
                             <div class="item-title">${proj.name}</div>
                             <div class="item-description">${proj.description}</div>
@@ -88,6 +111,32 @@ async function loadResumeContent() {
                             ` : ''}
                         </div>
                     `).join('')}
+                    ${hiddenProjects.length > 0 ? `
+                        <div class="expand-section">
+                            <div class="expand-controls" onclick="toggleSection('projects')">
+                                <span class="expand-text">expand</span>
+                                <span class="section-arrow">→</span>
+                            </div>
+                            <div class="collapsible-content" id="projects-content" style="display: none;">
+                                ${hiddenProjects.map(proj => `
+                                    <div class="project-item">
+                                        <div class="item-title">${proj.name}</div>
+                                        <div class="item-description">${proj.description}</div>
+                                        <div class="tech-tags">
+                                            ${proj.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
+                                        </div>
+                                        ${proj.github || proj.demo ? `
+                                            <div style="margin-top: 1rem;">
+                                                ${proj.github ? `<a href="https://${proj.github}" target="_blank" class="contact-item">GitHub →</a>` : ''}
+                                                ${proj.github && proj.demo ? ' • ' : ''}
+                                                ${proj.demo ? `<a href="https://${proj.demo}" target="_blank" class="contact-item">Demo →</a>` : ''}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }
@@ -181,6 +230,27 @@ async function loadResumeContent() {
         `;
     }
 }
+
+// --- Section Toggle Function ---
+function toggleSection(sectionName) {
+    const content = document.getElementById(sectionName + '-content');
+    const expandControls = event.target.closest('.expand-controls');
+    const expandText = expandControls.querySelector('.expand-text');
+    const arrow = expandControls.querySelector('.section-arrow');
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        expandText.textContent = 'collapse';
+        arrow.style.transform = 'rotate(90deg)';
+    } else {
+        content.style.display = 'none';
+        expandText.textContent = 'expand';
+        arrow.style.transform = 'rotate(0deg)';
+    }
+}
+
+// Make function globally available
+window.toggleSection = toggleSection;
 
 // --- Terminal Command Handling ---
 const prompt = '$ ';

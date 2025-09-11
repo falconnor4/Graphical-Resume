@@ -309,6 +309,42 @@
         margin: 0 0 1rem;
       }
       
+      /* Expandable Section Styles */
+      .expand-section {
+        margin-top: 1.5rem;
+        padding-left: 1.5rem;
+      }
+      
+      .expand-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      .expand-text {
+        font-size: 0.8rem;
+        color: var(--text-dim);
+        font-weight: normal;
+        text-transform: lowercase;
+      }
+      
+      .section-arrow {
+        color: var(--text-dim);
+        transition: transform 0.3s ease;
+        font-size: 0.9rem;
+      }
+      
+      .expand-controls:hover .expand-text,
+      .expand-controls:hover .section-arrow {
+        color: var(--primary-color);
+      }
+      
+      .collapsible-content {
+        margin-top: 1rem;
+      }
+      
       
       /* Game overlay */
       #game-display {
