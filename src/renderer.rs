@@ -61,14 +61,19 @@ impl State {
             .unwrap();
 
         let surface_caps = surface.get_capabilities(&adapter);
-        let surface_format = surface_caps.formats[0];
+        let surface_format = surface_caps
+            .formats
+            .iter()
+            .copied()
+            .find(|f| f.is_srgb())
+            .unwrap_or(surface_caps.formats[0]);
 
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface_format,
             width: size.0,
             height: size.1,
-            present_mode: surface_caps.present_modes[0],
+            present_mode: surface_caps.present_modes.iter().copied().find(|&p| p == wgpu::PresentMode::Mailbox).unwrap_or(wgpu::PresentMode::Fifo),
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
             desired_maximum_frame_latency: 2,

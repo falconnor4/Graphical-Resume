@@ -61,14 +61,16 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 200px;
-        background: rgba(10, 10, 10, 0.95);
-        backdrop-filter: blur(20px);
-        border-bottom: 2px solid rgba(0, 229, 229, 0.3);
+        height: 250px;
+        background: rgba(10, 10, 10, 0.85);
+        backdrop-filter: blur(15px);
+        border-bottom: 1px solid var(--primary-color);
         z-index: 10;
         display: flex;
         flex-direction: column;
-        transition: all 0.3s ease;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        border-radius: 0 0 12px 12px;
       }
       
       .top-terminal.collapsed {
@@ -84,29 +86,21 @@
         left: 0;
         right: 0;
         bottom: 0;
-      }
-      
-      .top-terminal.maximized .terminal-content {
-        flex: 1;
-        padding: 1rem;
-        overflow: auto;
-        height: calc(100vh - 40px); /* Full height minus header */
-      }
-      
-      
-      /* Hide floating buttons when terminal is maximized */
-      .top-terminal.maximized ~ .floating-actions {
-        display: none;
+        border-radius: 0;
       }
       
       .terminal-header {
         height: 40px;
         background: rgba(0, 229, 229, 0.1);
-        border-bottom: 1px solid var(--primary-color);
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 0 1rem;
+        cursor: grab;
+      }
+
+      .terminal-header:active {
+        cursor: grabbing;
       }
       
       .terminal-title {
@@ -122,13 +116,12 @@
       
       .terminal-btn {
         background: none;
-        border: 1px solid var(--primary-color);
+        border: 1px solid transparent;
         color: var(--primary-color);
-        width: 30px;
-        height: 30px;
-        border-radius: 4px;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
         cursor: pointer;
-        font-size: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -137,13 +130,20 @@
       
       .terminal-btn:hover {
         background: rgba(0, 229, 229, 0.2);
-        transform: scale(1.05);
+        border-color: var(--primary-color);
+      }
+
+      .terminal-btn svg {
+        width: 16px;
+        height: 16px;
       }
       
       .terminal-content {
         flex: 1;
-        padding: 0.5rem;
+        padding: 0.5rem 1rem;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
       }
       
       .top-terminal.collapsed .terminal-content {
@@ -153,9 +153,8 @@
       /* Floating action buttons */
       .floating-actions {
         position: fixed;
-        top: 50%;
+        bottom: 2rem;
         right: 2rem;
-        transform: translateY(-50%);
         z-index: 15;
         display: flex;
         flex-direction: column;
@@ -163,13 +162,13 @@
       }
       
       .fab {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
         background: rgba(0, 229, 229, 0.9);
         border: none;
         color: #000;
-        font-size: 24px;
+        font-size: 28px;
         cursor: pointer;
         transition: all 0.3s ease;
         display: flex;
@@ -179,14 +178,8 @@
       }
       
       .fab:hover {
-        transform: scale(1.1);
+        transform: scale(1.1) rotate(10deg);
         box-shadow: 0 6px 25px rgba(0, 229, 229, 0.5);
-      }
-      
-      .fab.small {
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
       }
       
       /* Resume content */
@@ -414,11 +407,17 @@
     <!-- Terminal at Top -->
     <div class="top-terminal" id="top-terminal">
       <div class="terminal-header">
-        <div class="terminal-title">Interactive Terminal - Type 'help' for commands</div>
+        <div class="terminal-title">Interactive Terminal</div>
         <div class="terminal-controls">
-          <button class="terminal-btn" id="minimize-btn" onclick="minimizeTerminal()" title="Minimize Terminal">−</button>
-          <button class="terminal-btn" id="restore-btn" onclick="restoreTerminal()" title="Restore Terminal" style="display: none;">↗</button>
-          <button class="terminal-btn" id="maximize-btn" onclick="maximizeTerminal()" title="Maximize Terminal">⛶</button>
+          <button class="terminal-btn" id="minimize-btn" onclick="minimizeTerminal()" title="Minimize">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 14H4v-4h16v4z"/></svg>
+          </button>
+          <button class="terminal-btn" id="restore-btn" onclick="restoreTerminal()" title="Restore" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4v6h6V4zm10 10h-6v6h6v-6zM10 14H4v6h6v-6zm10-4h-6v6h6v-6z"/></svg>
+          </button>
+          <button class="terminal-btn" id="maximize-btn" onclick="maximizeTerminal()" title="Maximize">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>
+          </button>
         </div>
       </div>
       <div class="terminal-content" id="terminal-content">
@@ -429,8 +428,7 @@
     <!-- Floating Action Buttons -->
     <div class="floating-actions">
       <button class="fab" onclick="playSnake()" title="Play Snake Game">🐍</button>
-      <button class="fab small" onclick="playPythonGames()" title="Python Games">🐍</button>
-      <button class="fab small" onclick="changeShader()" title="Change Background Effects">✨</button>
+      <button class="fab" onclick="changeShader()" title="Change Background Effects">✨</button>
     </div>
     
     <!-- Main Resume Content -->
@@ -455,7 +453,12 @@
       </div>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <script type="module">
+      import { Terminal } from 'https://cdn.jsdelivr.net/npm/xterm@5.3.0/+esm'
+      import { FitAddon } from 'https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/+esm';
+      window.Terminal = Terminal;
+      window.FitAddon = FitAddon;
+    </script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <script type="module" src="./index.js"></script>
   </body>
