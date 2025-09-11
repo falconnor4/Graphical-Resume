@@ -234,6 +234,21 @@ about.txt      portfolio/     games/       shaders/`
             return `Invalid shader. Available: ${shaders.join(', ')}`;
         }
     },
+    'python-games': {
+        description: 'Launch Python game collection',
+        execute: async () => {
+            if (!pyodide) return "Python runtime not loaded yet. Please wait...";
+            terminal.writeln("Loading Python game collection...");
+            try {
+                const response = await fetch('./pygame.py');
+                const gameCode = await response.text();
+                pyodide.runPython(gameCode);
+                return "Python games loaded. See terminal for instructions.";
+            } catch (error) {
+                return "Error loading Python games: " + error.message;
+            }
+        }
+    },
     'python': {
         description: 'Execute Python code (e.g., python print("hello"))',
         execute: async (args) => {
@@ -372,14 +387,21 @@ window.minimizeTerminal = function() {
     terminalEl.classList.remove('maximized');
     document.getElementById('resume-content').classList.add('terminal-minimized');
     document.getElementById('resume-content').classList.remove('terminal-maximized');
-    // ... (button visibility logic)
+
+    document.getElementById('minimize-btn').style.display = 'none';
+    document.getElementById('restore-btn').style.display = 'flex';
+    document.getElementById('maximize-btn').style.display = 'flex';
 };
 
 window.restoreTerminal = function() {
     const terminalEl = document.getElementById('top-terminal');
     terminalEl.classList.remove('collapsed', 'maximized');
     document.getElementById('resume-content').classList.remove('terminal-minimized', 'terminal-maximized');
-    // ... (button visibility logic)
+
+    document.getElementById('minimize-btn').style.display = 'flex';
+    document.getElementById('restore-btn').style.display = 'none';
+    document.getElementById('maximize-btn').style.display = 'flex';
+
     setTimeout(fitTerminal, 350);
 };
 
@@ -389,7 +411,11 @@ window.maximizeTerminal = function() {
     terminalEl.classList.remove('collapsed');
     document.getElementById('resume-content').classList.add('terminal-maximized');
     document.getElementById('resume-content').classList.remove('terminal-minimized');
-    // ... (button visibility logic)
+
+    document.getElementById('minimize-btn').style.display = 'flex';
+    document.getElementById('restore-btn').style.display = 'flex';
+    document.getElementById('maximize-btn').style.display = 'none';
+
     setTimeout(fitTerminal, 350);
 };
 
@@ -398,6 +424,20 @@ window.addEventListener('resize', fitTerminal);
 
 // --- Game Logic (remains mostly the same) ---
 window.playSnake = function() { startSnakeGame(); };
+
+window.playPythonGames = function() {
+    if (!terminal) {
+        initTopTerminal();
+    }
+
+    // Show terminal and run python games
+    if (document.getElementById('top-terminal').classList.contains('collapsed')) {
+        window.restoreTerminal();
+    }
+
+    handleCommand('python-games');
+};
+
 window.changeShader = function() {
     currentShader = (currentShader + 1) % shaders.length;
     set_shader(shaders[currentShader]);
@@ -505,6 +545,32 @@ function gameOver(game) {
 async function main() {
     await loadResumeContent();
     initTopTerminal();
+
+    document.addEventListener('keydown', (e) => {
+        // Global key handlers: ESC to close overlays, game controls
+        if (e.key === 'Escape') {
+            window.closeGame();
+            return;
+        }
+
+        if (game && game.running && document.getElementById('game-display').style.display === 'flex') {
+            switch (e.key.toLowerCase()) {
+                case 'w': case 'arrowup':
+                    if (game.direction.y === 0) game.direction = { x: 0, y: -1 };
+                    break;
+                case 's': case 'arrowdown':
+                    if (game.direction.y === 0) game.direction = { x: 0, y: 1 };
+                    break;
+                case 'a': case 'arrowleft':
+                    if (game.direction.x === 0) game.direction = { x: -1, y: 0 };
+                    break;
+                case 'd': case 'arrowright':
+                    if (game.direction.x === 0) game.direction = { x: 1, y: 0 };
+                    break;
+            }
+            e.preventDefault();
+        }
+    });
     
     try {
         console.log('Attempting WebGPU/WebGL initialization...');
