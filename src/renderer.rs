@@ -12,6 +12,9 @@ struct Uniforms {
     _padding3: [f32; 2],
     _extra_padding1: [f32; 4],
     _extra_padding2: [f32; 4],
+    _extra_padding3: [f32; 4],
+    _extra_padding4: [f32; 4],
+    _extra_padding5: [f32; 4],
 }
 
 use std::collections::HashMap;
@@ -91,6 +94,9 @@ impl State {
             _padding3: [0.0; 2],
             _extra_padding1: [0.0; 4],
             _extra_padding2: [0.0; 4],
+            _extra_padding3: [0.0; 4],
+            _extra_padding4: [0.0; 4],
+            _extra_padding5: [0.0; 4],
         };
 
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {

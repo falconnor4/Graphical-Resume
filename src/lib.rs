@@ -48,9 +48,10 @@ pub async fn start() {
         canvas_clone.set_height(height);
         
         RENDER_STATE.with(|cell| {
-            let mut borrow = cell.borrow_mut();
-            if let Some(state) = borrow.as_mut() {
-                state.resize((width, height));
+            if let Ok(mut borrow) = cell.try_borrow_mut() {
+                if let Some(state) = borrow.as_mut() {
+                    state.resize((width, height));
+                }
             }
         });
     }) as Box<dyn FnMut(_)>);
@@ -74,13 +75,14 @@ pub async fn start() {
 
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move |time: f64| {
         RENDER_STATE.with(|state_cell| {
-            let mut borrow = state_cell.borrow_mut();
-            if let Some(state) = borrow.as_mut() {
-                state.update(time as f32 / 1000.0, *mouse_pos.borrow());
-                match state.render() {
-                    Ok(_) => {}
-                    Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
-                    Err(e) => eprintln!("Error rendering frame: {:?}", e),
+            if let Ok(mut borrow) = state_cell.try_borrow_mut() {
+                if let Some(state) = borrow.as_mut() {
+                    state.update(time as f32 / 1000.0, *mouse_pos.borrow());
+                    match state.render() {
+                        Ok(_) => {}
+                        Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
+                        Err(e) => eprintln!("Error rendering frame: {:?}", e),
+                    }
                 }
             }
         });
@@ -119,9 +121,10 @@ async fn fetch_resume_data() -> Result<String, JsValue> {
 #[wasm_bindgen]
 pub fn set_shader(name: String) {
     RENDER_STATE.with(|cell| {
-        let mut borrow = cell.borrow_mut();
-        if let Some(state) = borrow.as_mut() {
-            state.set_pipeline(&name);
+        if let Ok(mut borrow) = cell.try_borrow_mut() {
+            if let Some(state) = borrow.as_mut() {
+                state.set_pipeline(&name);
+            }
         }
     });
 }

@@ -11,124 +11,172 @@ const shaders = ['default', 'fire', 'ice'];
 // --- Resume Loading ---
 async function loadResumeContent() {
     try {
-        const response = await fetch('./resume.json');
+        const response = await fetch('./resume.json?t=' + Date.now());
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const resume = await response.json();
+        console.log('Loaded resume data:', resume);
+        console.log('Resume sections:', resume.sections);
+        
         const content = document.getElementById('resume-content');
         
-        // ... (resume rendering logic remains the same)
+        // Build sections dynamically - only from JSON
+        let sectionsHTML = '';
+        
+        if (!resume.sections) {
+            throw new Error('No sections configuration found in resume.json');
+        }
+        
+        const sections = resume.sections;
+        
+        // Summary Section
+        if (sections.summary && sections.summary.enabled && resume.summary) {
+            sectionsHTML += `
+                <div class="section">
+                    <div class="section-title">
+                        <span>${sections.summary.icon}</span> ${sections.summary.title}
+                    </div>
+                    <p style="font-size: 1.1em; color: var(--text-muted); line-height: 1.7;">${resume.summary}</p>
+                </div>
+            `;
+        }
+        
+        // Experience Section
+        if (sections.experience && sections.experience.enabled && resume.experience && resume.experience.length > 0) {
+            sectionsHTML += `
+                <div class="section">
+                    <div class="section-title">
+                        <span>${sections.experience.icon}</span> ${sections.experience.title}
+                    </div>
+                    ${resume.experience.map(exp => `
+                        <div class="experience-item">
+                            <div class="item-title">${exp.title}</div>
+                            <div class="item-company">${exp.company} • ${exp.dates}</div>
+                            <div class="item-description">${exp.description}</div>
+                            <div class="tech-tags">
+                                ${exp.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        // Projects Section  
+        if (sections.projects && sections.projects.enabled && resume.projects && resume.projects.length > 0) {
+            sectionsHTML += `
+                <div class="section">
+                    <div class="section-title">
+                        <span>${sections.projects.icon}</span> ${sections.projects.title}
+                    </div>
+                    ${resume.projects.map(proj => `
+                        <div class="project-item">
+                            <div class="item-title">${proj.name}</div>
+                            <div class="item-description">${proj.description}</div>
+                            <div class="tech-tags">
+                                ${proj.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
+                            </div>
+                            ${proj.github || proj.demo ? `
+                                <div style="margin-top: 1rem;">
+                                    ${proj.github ? `<a href="https://${proj.github}" target="_blank" class="contact-item">GitHub →</a>` : ''}
+                                    ${proj.github && proj.demo ? ' • ' : ''}
+                                    ${proj.demo ? `<a href="https://${proj.demo}" target="_blank" class="contact-item">Demo →</a>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        // Skills Section
+        if (sections.skills && sections.skills.enabled && resume.skills) {
+            const skillCategories = Object.entries(resume.skills)
+                .filter(([key, skills]) => Array.isArray(skills) && skills.length > 0)
+                .map(([key, skills]) => {
+                    if (!sections.skills.categories || !sections.skills.categories[key]) {
+                        return ''; // Skip categories not defined in JSON
+                    }
+                    const categoryName = sections.skills.categories[key];
+                    return `
+                        <div class="skill-category">
+                            <h4>${categoryName}</h4>
+                            <div class="tech-tags">
+                                ${skills.map(skill => `<span class="tech-tag">${skill}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).filter(category => category).join('');
+            
+            if (skillCategories) {
+                sectionsHTML += `
+                    <div class="section">
+                        <div class="section-title">
+                            <span>${sections.skills.icon}</span> ${sections.skills.title}
+                        </div>
+                        <div class="skills-grid">
+                            ${skillCategories}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Education Section
+        if (sections.education && sections.education.enabled && resume.education && resume.education.length > 0) {
+            sectionsHTML += `
+                <div class="section">
+                    <div class="section-title">
+                        <span>${sections.education.icon}</span> ${sections.education.title}
+                    </div>
+                    ${resume.education.map(edu => `
+                        <div class="experience-item">
+                            <div class="item-title">${edu.degree}</div>
+                            <div class="item-company">${edu.university} • ${edu.dates}${edu.gpa && edu.gpa !== 'In Progress' ? ` • GPA: ${edu.gpa}` : ''}</div>
+                            ${edu.coursework && edu.coursework.length ? `
+                                <div style="margin-top: 0.5rem;">
+                                    <strong style="color: var(--primary-color);">Relevant Coursework:</strong>
+                                    <div class="tech-tags" style="margin-top: 0.5rem;">
+                                        ${edu.coursework.map(course => `<span class="tech-tag">${course}</span>`).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        // Validate required contact info exists
+        if (!resume.contact || !resume.contact.name || !resume.contact.title || !resume.contact.email) {
+            throw new Error('Required contact information missing from resume.json');
+        }
+
+        // Render everything
         content.innerHTML = `
             <div class="resume-header">
                 <h1 class="resume-name">${resume.contact.name}</h1>
-                <div class="resume-title">Full-Stack Software Engineer</div>
+                <div class="resume-title">${resume.contact.title}</div>
                 <div class="contact-info">
                     <a href="mailto:${resume.contact.email}" class="contact-item">${resume.contact.email}</a>
-                    <a href="https://${resume.contact.linkedin}" class="contact-item" target="_blank">${resume.contact.linkedin}</a>
-                    <a href="https://${resume.contact.github}" class="contact-item" target="_blank">${resume.contact.github}</a>
-                    <span class="contact-item">${resume.contact.location}</span>
+                    ${resume.contact.linkedin ? `<a href="https://${resume.contact.linkedin}" class="contact-item" target="_blank">${resume.contact.linkedin}</a>` : ''}
+                    ${resume.contact.github ? `<a href="https://${resume.contact.github}" class="contact-item" target="_blank">${resume.contact.github}</a>` : ''}
+                    ${resume.contact.location ? `<span class="contact-item">${resume.contact.location}</span>` : ''}
                 </div>
             </div>
             
-            <div class="section">
-                <div class="section-title">
-                    <span>💡</span> Summary
-                </div>
-                <p style="font-size: 1.1em; color: var(--text-muted); line-height: 1.7;">${resume.summary}</p>
-            </div>
-            
-            <div class="section">
-                <div class="section-title">
-                    <span>💼</span> Experience
-                </div>
-                ${resume.experience.map(exp => `
-                    <div class="experience-item">
-                        <div class="item-title">${exp.title}</div>
-                        <div class="item-company">${exp.company} • ${exp.dates}</div>
-                        <div class="item-description">${exp.description}</div>
-                        <div class="tech-tags">
-                            ${exp.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-            
-            <div class="section">
-                <div class="section-title">
-                    <span>🚀</span> Projects
-                </div>
-                ${resume.projects.map(proj => `
-                    <div class="project-item">
-                        <div class="item-title">${proj.name}</div>
-                        <div class="item-description">${proj.description}</div>
-                        <div class="tech-tags">
-                            ${proj.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
-                        </div>
-                        ${proj.github || proj.demo ? `
-                            <div style="margin-top: 1rem;">
-                                ${proj.github ? `<a href="https://${proj.github}" target="_blank" class="contact-item">GitHub →</a>` : ''}
-                                ${proj.github && proj.demo ? ' • ' : ''}
-                                ${proj.demo ? `<a href="https://${proj.demo}" target="_blank" class="contact-item">Demo →</a>` : ''}
-                            </div>
-                        ` : ''}
-                    </div>
-                `).join('')}
-            </div>
-            
-            <div class="section">
-                <div class="section-title">
-                    <span>🛠️</span> Skills
-                </div>
-                <div class="skills-grid">
-                    <div class="skill-category">
-                        <h4>Languages</h4>
-                        <div class="tech-tags">
-                            ${resume.skills.languages.map(skill => `<span class="tech-tag">${skill}</span>`).join('')}
-                        </div>
-                    </div>
-                    <div class="skill-category">
-                        <h4>Web Technologies</h4>
-                        <div class="tech-tags">
-                            ${resume.skills.web.map(skill => `<span class="tech-tag">${skill}</span>`).join('')}
-                        </div>
-                    </div>
-                    <div class="skill-category">
-                        <h4>Tools & Platforms</h4>
-                        <div class="tech-tags">
-                            ${resume.skills.tools.map(skill => `<span class="tech-tag">${skill}</span>`).join('')}
-                        </div>
-                    </div>
-                    <div class="skill-category">
-                        <h4>Concepts</h4>
-                        <div class="tech-tags">
-                            ${resume.skills.concepts.map(skill => `<span class="tech-tag">${skill}</span>`).join('')}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="section">
-                <div class="section-title">
-                    <span>🎓</span> Education
-                </div>
-                ${resume.education.map(edu => `
-                    <div style="background: rgba(26, 26, 26, 0.6); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--primary-color);">
-                        <div class="item-title">${edu.degree}</div>
-                        <div class="item-company">${edu.university} • ${edu.dates} • GPA: ${edu.gpa}</div>
-                        <div style="margin-top: 0.5rem;">
-                            <strong style="color: var(--primary-color);">Relevant Coursework:</strong>
-                            <div class="tech-tags" style="margin-top: 0.5rem;">
-                                ${edu.coursework.map(course => `<span class="tech-tag">${course}</span>`).join('')}
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
+            ${sectionsHTML}
         `;
     } catch (error) {
         console.error('Error loading resume:', error);
         document.getElementById('resume-content').innerHTML = `
             <div style="text-align: center; padding: 2rem; color: var(--accent-red);">
-                <h2>Error Loading Resume</h2>
-                <p>Please try refreshing the page.</p>
+                <h2>Resume Loading Failed</h2>
+                <p>Error: ${error.message}</p>
+                <p>Check console for details.</p>
             </div>
         `;
     }

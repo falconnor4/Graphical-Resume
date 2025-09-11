@@ -1,62 +1,96 @@
 {
   "contact": {
-    "name": "Connor Fallon",
-    "email": "connor@example.com",
-    "linkedin": "linkedin.com/in/connorfallon",
+    "name": "Connor Brown",
+    "title": "Graphics Programmer & Game Developer",
+    "email": "falconnor4@gmail.com",
+    "linkedin": "linkedin.com/in/connor-brown-dev",
     "github": "github.com/falconnor4",
-    "location": "San Francisco, CA"
+    "location": "Vancouver, BC"
   },
-  "summary": "Full-stack software engineer with expertise in modern web technologies, systems programming, and interactive applications. Passionate about creating innovative user experiences and high-performance software.",
+  "sections": {
+    "summary": {
+      "title": "Summary",
+      "icon": "💡",
+      "enabled": true
+    },
+    "experience": {
+      "title": "Experience", 
+      "icon": "💼",
+      "enabled": true
+    },
+    "projects": {
+      "title": "Projects",
+      "icon": "🚀", 
+      "enabled": true
+    },
+    "skills": {
+      "title": "Skills",
+      "icon": "🛠️",
+      "enabled": true,
+      "categories": {
+        "languages": "Programming Languages",
+        "web": "Web Technologies", 
+        "tools": "Tools & Platforms",
+        "concepts": "Core Concepts"
+      }
+    },
+    "education": {
+      "title": "Education",
+      "icon": "🎓",
+      "enabled": true
+    }
+  },
+  "summary": "A versatile and motivated programmer with 3 years of professional experience in software and game development. Currently contributing as a programmer at Studio Todos while pursuing a Bachelor's in Computer Science at BCIT. Known for bringing a positive, team-oriented attitude and a knack for troubleshooting complex technical issues. Eager to apply a broad technical skillset to solve new challenges and contribute to innovative projects.",
   "experience": [
     {
-      "title": "Senior Software Engineer",
-      "company": "Tech Innovations Inc.",
-      "dates": "2021 - Present",
-      "description": "Led development of real-time web applications using Rust, WebGPU, and modern JavaScript frameworks. Built interactive terminal interfaces and WebAssembly-based tools.",
-      "technologies": ["Rust", "WebGPU", "TypeScript", "React", "WebAssembly"]
+      "title": "Graphics Programmer",
+      "company": "Studio Todos",
+      "dates": "February 2025 - Present",
+      "description": "Working as a lead graphics programmer developing novel view synthesis and experimental baked lighting techniques. Collaborating with the team to push the boundaries of real-time rendering and visual effects.",
+      "technologies": ["C++", "GLSL", "Graphics Programming", "Real-time Rendering", "Lighting Systems"]
     },
     {
-      "title": "Full Stack Developer",
-      "company": "Digital Solutions Co.",
-      "dates": "2019 - 2021",
-      "description": "Developed scalable web applications and APIs. Implemented DevOps practices and maintained cloud infrastructure.",
-      "technologies": ["Python", "Node.js", "PostgreSQL", "AWS", "Docker"]
+      "title": "General Programmer",
+      "company": "Crystal Blue Studios",
+      "dates": "September 2023 - March 2024",
+      "description": "Worked as a general programmer contributing to various game development projects including SCP: Enigma. Gained experience in game systems programming and collaborative development workflows.",
+      "technologies": ["C++", "Unity", "Game Development", "Version Control"]
     },
     {
-      "title": "Software Developer Intern",
-      "company": "StartupTech",
-      "dates": "2018 - 2019",
-      "description": "Built web interfaces and contributed to mobile app development. Gained experience with modern development workflows and agile practices.",
-      "technologies": ["JavaScript", "React Native", "Git", "REST APIs"]
+      "title": "Art Technology Collaborator",
+      "company": "Vancouver Art Gallery",
+      "dates": "2023",
+      "description": "Collaborated with the Vancouver Art Gallery on their British Properties art piece, providing technical expertise and programming support for interactive digital art installations.",
+      "technologies": ["Interactive Media", "Digital Art", "Technical Programming"]
     }
   ],
   "education": [
     {
-      "degree": "B.S. in Computer Science",
-      "university": "University of California",
-      "dates": "2015 - 2019",
-      "gpa": "3.8/4.0",
-      "coursework": ["Data Structures", "Algorithms", "Computer Graphics", "Systems Programming"]
+      "degree": "Bachelor's in Computer Science",
+      "university": "British Columbia Institute of Technology (BCIT)",
+      "dates": "December 2024 - Present",
+      "gpa": "In Progress",
+      "coursework": ["Computer Programming", "Software Architecture", "Data Structures", "System Design"]
     }
   ],
   "skills": {
-    "languages": ["Rust", "Python", "JavaScript", "TypeScript", "C++", "Go"],
-    "web": ["React", "HTML/CSS", "WebAssembly", "WebGPU", "Node.js"],
-    "tools": ["Git", "Docker", "Linux", "AWS", "PostgreSQL", "MongoDB"],
-    "concepts": ["System Design", "Algorithms", "Graphics Programming", "Performance Optimization"]
+    "languages": ["C", "C++", "Rust", "GLSL", "Python", "JavaScript"],
+    "web": ["HTML/CSS", "WebGPU", "WebAssembly", "Modern JavaScript"],
+    "tools": ["Unity", "Unreal Engine", "Blender", "Git", "Visual Studio", "Linux"],
+    "concepts": ["Graphics Programming", "Game Development", "Software Architecture", "Problem Solving", "Team Collaboration"]
   },
   "projects": [
     {
       "name": "Interactive Resume Terminal",
-      "description": "Built this interactive resume site with WebGPU graphics and Python integration",
-      "technologies": ["Rust", "WebGPU", "Pyodide", "WASM"],
+      "description": "Built this interactive resume site with WebGPU shaders, terminal interface, and Python integration featuring Mandelbrot fractals and dynamic effects",
+      "technologies": ["Rust", "WebGPU", "WGSL", "JavaScript", "Pyodide"],
       "github": "github.com/falconnor4/rendered-resume"
     },
     {
-      "name": "Real-time Shader Playground",
-      "description": "WebGPU-based graphics application with custom shaders and interactive controls",
-      "technologies": ["WebGPU", "GLSL", "JavaScript"],
-      "demo": "example.com/shader-demo"
+      "name": "Game Development Portfolio",
+      "description": "Collection of game projects and technical demos showcasing graphics programming and engine development skills",
+      "technologies": ["C++", "Unity", "Unreal Engine", "GLSL"],
+      "github": "github.com/falconnor4"
     }
   ]
 }

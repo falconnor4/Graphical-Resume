@@ -9,6 +9,9 @@ struct Uniforms {
     _padding3: vec2<f32>,
     _extra_padding1: vec4<f32>,
     _extra_padding2: vec4<f32>,
+    _extra_padding3: vec4<f32>,
+    _extra_padding4: vec4<f32>,
+    _extra_padding5: vec4<f32>,
 }
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
