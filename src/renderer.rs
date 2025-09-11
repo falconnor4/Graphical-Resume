@@ -1,15 +1,24 @@
 use web_sys::HtmlCanvasElement;
 use wgpu::util::DeviceExt;
 
+include!(concat!(env!("OUT_DIR"), "/shaders.rs"));
+
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 struct Uniforms {
     time: f32,
-    _padding1: [u32; 3], // Pad to align with WGSL
+    _pad0: [u32; 3],
+    _padding1: [f32; 3],
+    _pad1: [u32; 1],
     mouse: [f32; 2],
-    _padding2: [u32; 2],
+    _padding2: [f32; 2],
     resolution: [f32; 2],
-    _padding3: [u32; 2],
+    _padding3: [f32; 2],
+    _extra_padding1: [f32; 4],
+    _extra_padding2: [f32; 4],
+    _extra_padding3: [f32; 4],
+    _extra_padding4: [f32; 4],
+    _extra_padding5: [f32; 4],
 }
 
 use std::collections::HashMap;
@@ -53,7 +62,7 @@ impl State {
                 &wgpu::DeviceDescriptor {
                     label: None,
                     required_features: wgpu::Features::empty(),
-                    required_limits: wgpu::Limits::default(),
+                    required_limits: wgpu::Limits::downlevel_webgl2_defaults(),
                 },
                 None,
             )
@@ -61,14 +70,19 @@ impl State {
             .unwrap();
 
         let surface_caps = surface.get_capabilities(&adapter);
-        let surface_format = surface_caps.formats[0];
+        let surface_format = surface_caps
+            .formats
+            .iter()
+            .copied()
+            .find(|f| f.is_srgb())
+            .unwrap_or(surface_caps.formats[0]);
 
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface_format,
             width: size.0,
             height: size.1,
-            present_mode: surface_caps.present_modes[0],
+            present_mode: surface_caps.present_modes.iter().copied().find(|&p| p == wgpu::PresentMode::Mailbox).unwrap_or(wgpu::PresentMode::Fifo),
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
@@ -79,9 +93,16 @@ impl State {
             time: 0.0,
             mouse: [0.0, 0.0],
             resolution: [size.0 as f32, size.1 as f32],
-            _padding1: [0; 3],
-            _padding2: [0; 2],
-            _padding3: [0; 2],
+            _pad0: [0; 3],
+            _padding1: [0.0; 3],
+            _pad1: [0; 1],
+            _padding2: [0.0; 2],
+            _padding3: [0.0; 2],
+            _extra_padding1: [0.0; 4],
+            _extra_padding2: [0.0; 4],
+            _extra_padding3: [0.0; 4],
+            _extra_padding4: [0.0; 4],
+            _extra_padding5: [0.0; 4],
         };
 
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -122,18 +143,19 @@ impl State {
             });
 
         let mut render_pipelines = HashMap::new();
+
+        let vs_source = SHADER_SOURCES
+            .iter()
+            .find(|(name, _)| *name == "vs")
+            .map(|(_, source)| *source)
+            .expect("vs.wgsl not found");
+
         let vs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Vertex Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shader.vs.wgsl").into()),
+            source: wgpu::ShaderSource::Wgsl(vs_source.into()),
         });
 
-        let shader_sources = [
-            ("default", include_str!("shader.fs.wgsl")),
-            ("fire", include_str!("shader_fire.fs.wgsl")),
-            ("ice", include_str!("shader_ice.fs.wgsl")),
-        ];
-
-        for (name, source) in shader_sources.iter() {
+        for (name, source) in SHADER_SOURCES.iter().filter(|(name, _)| *name != "vs") {
             let fs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: Some(&format!("{} Fragment Shader", name)),
                 source: wgpu::ShaderSource::Wgsl((*source).into()),
@@ -167,6 +189,13 @@ impl State {
             render_pipelines.insert(name.to_string(), pipeline);
         }
 
+        let mut shader_names: Vec<String> = render_pipelines.keys().cloned().collect();
+        shader_names.sort();
+        let active_pipeline = shader_names.first().cloned().unwrap_or_default();
+        
+        web_sys::console::log_2(&"Available shaders:".into(), &format!("{:?}", shader_names).into());
+        web_sys::console::log_2(&"Default shader set to:".into(), &active_pipeline.clone().into());
+
         Self {
             surface,
             device,
@@ -174,7 +203,7 @@ impl State {
             config,
             size,
             render_pipelines,
-            active_pipeline: "default".to_string(),
+            active_pipeline,
             uniforms,
             uniform_buffer,
             uniform_bind_group,
@@ -241,5 +270,15 @@ impl State {
         output.present();
 
         Ok(())
+    }
+
+    pub fn get_shader_names(&self) -> Vec<String> {
+        let mut names: Vec<String> = self.render_pipelines.keys().cloned().collect();
+        names.sort();
+        names
+    }
+
+    pub fn get_active_shader(&self) -> String {
+        self.active_pipeline.clone()
     }
 }

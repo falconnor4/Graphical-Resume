@@ -14,3 +14,4 @@ __pycache__/
 # General
 .DS_Store
 *.log
+/jules-scratch

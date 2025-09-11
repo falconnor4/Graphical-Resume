@@ -3,7 +3,10 @@
     "allow": [
       "Bash(wasm-pack build:*)",
       "Bash(chmod:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(python3:*)",
+      "Bash(curl:*)",
+      "Bash(cargo:*)"
     ],
     "deny": [],
     "ask": []

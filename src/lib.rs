@@ -2,6 +2,11 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
+
+#[wasm_bindgen]
+extern "C" {
+    fn setup_shader_switcher(names: js_sys::Array);
+}
 use serde::Deserialize;
 
 mod renderer;
@@ -35,6 +40,14 @@ pub async fn start() {
     web_sys::console::log_1(&"Creating WebGPU renderer state...".into());
     let state = renderer::State::new(canvas.clone()).await;
     web_sys::console::log_1(&"WebGPU renderer state created successfully".into());
+
+    let shader_names = state.get_shader_names();
+    let js_shader_names = js_sys::Array::new();
+    for name in shader_names {
+        js_shader_names.push(&JsValue::from_str(&name));
+    }
+    setup_shader_switcher(js_shader_names);
+
     RENDER_STATE.with(|cell| *cell.borrow_mut() = Some(state));
 
     // Handle resize
@@ -48,8 +61,10 @@ pub async fn start() {
         canvas_clone.set_height(height);
         
         RENDER_STATE.with(|cell| {
-            if let Some(state) = cell.borrow_mut().as_mut() {
-                state.resize((width, height));
+            if let Ok(mut borrow) = cell.try_borrow_mut() {
+                if let Some(state) = borrow.as_mut() {
+                    state.resize((width, height));
+                }
             }
         });
     }) as Box<dyn FnMut(_)>);
@@ -73,12 +88,14 @@ pub async fn start() {
 
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move |time: f64| {
         RENDER_STATE.with(|state_cell| {
-            if let Some(state) = state_cell.borrow_mut().as_mut() {
-                state.update(time as f32 / 1000.0, *mouse_pos.borrow());
-                match state.render() {
-                    Ok(_) => {}
-                    Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
-                    Err(e) => eprintln!("Error rendering frame: {:?}", e),
+            if let Ok(mut borrow) = state_cell.try_borrow_mut() {
+                if let Some(state) = borrow.as_mut() {
+                    state.update(time as f32 / 1000.0, *mouse_pos.borrow());
+                    match state.render() {
+                        Ok(_) => {}
+                        Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
+                        Err(e) => eprintln!("Error rendering frame: {:?}", e),
+                    }
                 }
             }
         });
@@ -117,22 +134,65 @@ async fn fetch_resume_data() -> Result<String, JsValue> {
 #[wasm_bindgen]
 pub fn set_shader(name: String) {
     RENDER_STATE.with(|cell| {
-        if let Some(state) = cell.borrow_mut().as_mut() {
-            state.set_pipeline(&name);
+        if let Ok(mut borrow) = cell.try_borrow_mut() {
+            if let Some(state) = borrow.as_mut() {
+                state.set_pipeline(&name);
+            }
         }
     });
+}
+
+#[wasm_bindgen]
+pub fn get_active_shader() -> String {
+    RENDER_STATE.with(|cell| {
+        if let Ok(borrow) = cell.try_borrow() {
+            if let Some(state) = borrow.as_ref() {
+                return state.get_active_shader();
+            }
+        }
+        "none".to_string()
+    })
 }
 
 #[wasm_bindgen]
 pub async fn run_command(command: String) -> String {
     let parts: Vec<&str> = command.trim().split_whitespace().collect();
     match parts.as_slice() {
-        ["help"] => "\nAvailable commands:\n  help\n  cat resume\n  view resume\n  game (Snake - JavaScript)\n  python-games (Python collection)\n  python <code>\n  shader [default|fire|ice]\n  clear\n".to_string(),
+        ["help"] => "\nAvailable commands:\n  help\n  cat resume\n  view resume\n  game (Snake - JavaScript)\n  python-games (Python collection)\n  python <code>\n  shaders (list available shaders)\n  shader [name] (switch shader)\n  clear\n".to_string(),
         ["cat", "resume"] => fetch_resume_data().await.unwrap_or_else(|_| "Error fetching resume".to_string()),
         ["view", "resume"] => "__SHOW_RESUME__".to_string(),
         ["game"] => "\nStarting Snake Game...\nUse WASD or arrow keys to move\nEat the red squares to grow!\n\n__START_GAME__".to_string(),
         ["python-games"] => "__RUN_PYTHON_GAMES__".to_string(),
-        ["shader", name] => format!("__SET_SHADER__:{}", name),
+        ["shader", name] => {
+            let shader_exists = RENDER_STATE.with(|cell| {
+                cell.borrow().as_ref().unwrap().get_shader_names().contains(&name.to_string())
+            });
+            if shader_exists {
+                format!("__SET_SHADER__:{}", name)
+            } else {
+                let available = RENDER_STATE.with(|cell| {
+                    cell.borrow().as_ref().unwrap().get_shader_names()
+                });
+                format!("Shader '{}' not found. Available shaders:\n  {}", name, available.join("\n  "))
+            }
+        },
+        ["shaders"] => {
+            RENDER_STATE.with(|cell| {
+                let state = cell.borrow();
+                let state = state.as_ref().unwrap();
+                let names = state.get_shader_names();
+                let active = state.get_active_shader();
+                let shader_list = names.iter()
+                    .map(|name| if name == &active {
+                        format!("  {} (active)", name)
+                    } else {
+                        format!("  {}", name)
+                    })
+                    .collect::<Vec<String>>()
+                    .join("\n");
+                format!("Available shaders:\n{}\n\nUse 'shader [name]' to switch", shader_list)
+            })
+        },
         ["clear"] => "__CLEAR__".to_string(),
         [] => "".to_string(),
         _ => format!("\n{}: command not found", command),
