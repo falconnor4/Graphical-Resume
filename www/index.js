@@ -4,7 +4,6 @@ import init, { run_command, set_shader, get_active_shader } from './pkg/rendered
 let terminal = null;
 let fitAddon = null;
 let pyodide = null;
-let game = null;
 
 // --- Resume Loading ---
 async function loadResumeContent() {
@@ -270,22 +269,8 @@ async function handleCommand(commandStr) {
             terminal.writeln(`Switched to shader: ${shaderName}`);
         } else if (output === '__CLEAR__') {
             terminal.clear();
-        } else if (output === '__START_GAME__') {
-            startSnakeGame();
-        } else if (output === '__RUN_PYTHON_GAMES__') {
-            if (!pyodide) {
-                terminal.writeln("Python runtime not loaded yet. Please wait...");
-            } else {
-                terminal.writeln("Loading Python game collection...");
-                try {
-                    const response = await fetch('./pygame.py');
-                    const gameCode = await response.text();
-                    pyodide.runPython(gameCode);
-                    terminal.writeln("Python games loaded. See terminal for instructions.");
-                } catch (error) {
-                    terminal.writeln("Error loading Python games: " + error.message);
-                }
-            }
+        } else if (output === '__DOWNLOAD_PDF__') {
+            downloadResumeAsPdf();
         } else if (output === '__SHOW_RESUME__') {
             // This is not handled yet.
         }
@@ -425,118 +410,42 @@ window.maximizeTerminal = function() {
 window.addEventListener('resize', fitTerminal);
 
 
-// --- Game Logic (remains mostly the same) ---
-window.playSnake = function() { startSnakeGame(); };
 
-window.playPythonGames = function() {
-    if (!terminal) {
-        initTopTerminal();
+async function downloadResumeAsPdf() {
+    if (!pyodide) {
+        terminal.writeln("Python runtime not loaded yet. Please wait...");
+        return;
     }
 
-    // Show terminal and run python games
-    if (document.getElementById('top-terminal').classList.contains('collapsed')) {
-        window.restoreTerminal();
+    terminal.writeln("Generating PDF... this may take a moment.");
+
+    try {
+        await pyodide.loadPackage('fpdf');
+        const response = await fetch('./generate_pdf.py');
+        const pdfGeneratorCode = await response.text();
+        
+        const resumeResponse = await fetch('./resume.json');
+        const resumeJson = await resumeResponse.text();
+
+        pyodide.runPython(pdfGeneratorCode);
+        const pdfBytes = pyodide.globals.get('create_pdf')(resumeJson);
+        
+        const blob = new Blob([pdfBytes.toJs({pyproxy_equals: false})], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'resume.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        terminal.writeln("PDF download started.");
+    } catch (error) {
+        terminal.writeln(`Error generating PDF: ${error.message}`);
+        console.error("PDF Generation Error:", error);
     }
-
-    handleCommand('python-games');
-};
-
-window.closeGame = function() {
-    if (game) game.running = false;
-    document.getElementById('game-display').style.display = 'none';
-};
-// ... (the rest of the game implementation)
-function startSnakeGame() {
-    const canvas = document.getElementById('game-canvas');
-    const ctx = canvas.getContext('2d');
-    const scoreElement = document.getElementById('game-score');
-    
-    game = {
-        canvas, ctx, scoreElement,
-        gridSize: 20,
-        snake: [{ x: 200, y: 200 }],
-        direction: { x: 0, y: 0 },
-        food: { x: 0, y: 0 },
-        score: 0,
-        running: true
-    };
-    
-    // Reset score
-    scoreElement.textContent = '0';
-    
-    // Place first food
-    placeFood(game);
-    
-    // Game loop
-    function gameLoop() {
-        if (!game.running) return;
-        
-        // Move snake
-        const head = { ...game.snake[0] };
-        head.x += game.direction.x * game.gridSize;
-        head.y += game.direction.y * game.gridSize;
-        
-        // Check wall collision
-        if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
-            gameOver(game);
-            return;
-        }
-        
-        // Check self collision
-        if (game.snake.some(segment => segment.x === head.x && segment.y === head.y)) {
-            gameOver(game);
-            return;
-        }
-        
-        game.snake.unshift(head);
-        
-        // Check food collision
-        if (head.x === game.food.x && head.y === game.food.y) {
-            game.score += 10;
-            scoreElement.textContent = game.score;
-            placeFood(game);
-        } else {
-            game.snake.pop();
-        }
-        
-        // Draw
-        ctx.fillStyle = '#0a0a0a';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Draw snake
-        ctx.fillStyle = '#00e5e5';
-        game.snake.forEach(segment => {
-            ctx.fillRect(segment.x, segment.y, game.gridSize - 2, game.gridSize - 2);
-        });
-        
-        // Draw food
-        ctx.fillStyle = '#ff0000';
-        ctx.fillRect(game.food.x, game.food.y, game.gridSize - 2, game.gridSize - 2);
-        
-        setTimeout(gameLoop, 150);
-    }
-    
-    gameLoop();
-    document.getElementById('game-display').style.display = 'flex';
-}
-
-function placeFood(game) {
-    const maxX = (game.canvas.width / game.gridSize) - 1;
-    const maxY = (game.canvas.height / game.gridSize) - 1;
-    
-    do {
-        game.food.x = Math.floor(Math.random() * maxX) * game.gridSize;
-        game.food.y = Math.floor(Math.random() * maxY) * game.gridSize;
-    } while (game.snake.some(segment => segment.x === game.food.x && segment.y === game.food.y));
-}
-
-function gameOver(game) {
-    game.running = false;
-    game.ctx.fillStyle = '#00e5e5';
-    game.ctx.font = '24px Share Tech Mono';
-    game.ctx.textAlign = 'center';
-    game.ctx.fillText('Game Over!', game.canvas.width / 2, game.canvas.height / 2);
-    game.ctx.fillText(`Score: ${game.score}`, game.canvas.width / 2, game.canvas.height / 2 + 30);
 }
 
 window.setup_shader_switcher = (names) => {
@@ -563,29 +472,13 @@ async function main() {
     await loadResumeContent();
     initTopTerminal();
 
+    document.getElementById('download-pdf-btn').addEventListener('click', downloadResumeAsPdf);
+
     document.addEventListener('keydown', (e) => {
         // Global key handlers: ESC to close overlays, game controls
         if (e.key === 'Escape') {
-            window.closeGame();
+            // Future use for closing modals or overlays
             return;
-        }
-
-        if (game && game.running && document.getElementById('game-display').style.display === 'flex') {
-            switch (e.key.toLowerCase()) {
-                case 'w': case 'arrowup':
-                    if (game.direction.y === 0) game.direction = { x: 0, y: -1 };
-                    break;
-                case 's': case 'arrowdown':
-                    if (game.direction.y === 0) game.direction = { x: 0, y: 1 };
-                    break;
-                case 'a': case 'arrowleft':
-                    if (game.direction.x === 0) game.direction = { x: -1, y: 0 };
-                    break;
-                case 'd': case 'arrowright':
-                    if (game.direction.x === 0) game.direction = { x: 1, y: 0 };
-                    break;
-            }
-            e.preventDefault();
         }
     });
     

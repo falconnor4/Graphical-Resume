@@ -158,11 +158,10 @@ pub fn get_active_shader() -> String {
 pub async fn run_command(command: String) -> String {
     let parts: Vec<&str> = command.trim().split_whitespace().collect();
     match parts.as_slice() {
-        ["help"] => "\nAvailable commands:\n  help\n  cat resume\n  view resume\n  game (Snake - JavaScript)\n  python-games (Python collection)\n  python <code>\n  shaders (list available shaders)\n  shader [name] (switch shader)\n  clear\n".to_string(),
+        ["help"] => "\nAvailable commands:\n  help\n  cat resume\n  view resume\n  resume --download-pdf\n  python <code>\n  shaders (list available shaders)\n  shader [name] (switch shader)\n  clear\n".to_string(),
         ["cat", "resume"] => fetch_resume_data().await.unwrap_or_else(|_| "Error fetching resume".to_string()),
         ["view", "resume"] => "__SHOW_RESUME__".to_string(),
-        ["game"] => "\nStarting Snake Game...\nUse WASD or arrow keys to move\nEat the red squares to grow!\n\n__START_GAME__".to_string(),
-        ["python-games"] => "__RUN_PYTHON_GAMES__".to_string(),
+        ["resume", "--download-pdf"] => "__DOWNLOAD_PDF__".to_string(),
         ["shader", name] => {
             let shader_exists = RENDER_STATE.with(|cell| {
                 cell.borrow().as_ref().unwrap().get_shader_names().contains(&name.to_string())
