@@ -261,6 +261,19 @@ async function handleCommand(commandStr) {
     }
     historyIndex = commandHistory.length;
 
+    if (commandStr.trim().startsWith('python ')) {
+        const code = commandStr.trim().substring(7);
+        try {
+            let result = await pyodide.runPythonAsync(code);
+            if (result !== undefined) {
+                terminal.writeln(result);
+            }
+        } catch (error) {
+            terminal.writeln(error.message);
+        }
+        return;
+    }
+
     const output = await run_command(commandStr);
     if (output) {
         if (output.startsWith('__SET_SHADER__:')) {
@@ -412,34 +425,124 @@ window.addEventListener('resize', fitTerminal);
 
 
 async function downloadResumeAsPdf() {
-    if (!pyodide) {
-        terminal.writeln("Python runtime not loaded yet. Please wait...");
-        return;
-    }
-
     terminal.writeln("Generating PDF... this may take a moment.");
 
     try {
-        await pyodide.loadPackage('fpdf');
-        const response = await fetch('./generate_pdf.py');
-        const pdfGeneratorCode = await response.text();
-        
-        const resumeResponse = await fetch('./resume.json');
-        const resumeJson = await resumeResponse.text();
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
 
-        pyodide.runPython(pdfGeneratorCode);
-        const pdfBytes = pyodide.globals.get('create_pdf')(resumeJson);
-        
-        const blob = new Blob([pdfBytes.toJs({pyproxy_equals: false})], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'resume.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        const resumeResponse = await fetch('./resume.json');
+        const resume = await resumeResponse.json();
+
+        // Set font
+        doc.setFont("helvetica");
+
+        // Title
+        doc.setFontSize(16);
+        doc.text(resume.contact.name, 105, 20, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text(resume.contact.title, 105, 30, { align: 'center' });
+        doc.text(`${resume.contact.email} | ${resume.contact.location}`, 105, 40, { align: 'center' });
+
+        let y = 60;
+
+        // Summary
+        if (resume.sections.summary.enabled) {
+            doc.setFontSize(14);
+            doc.text("Summary", 20, y);
+            y += 10;
+            doc.setFontSize(12);
+            const summaryLines = doc.splitTextToSize(resume.summary, 170);
+            doc.text(summaryLines, 20, y);
+            y += summaryLines.length * 5 + 10;
+        }
+
+        // Experience
+        if (resume.sections.experience.enabled) {
+            doc.setFontSize(14);
+            doc.text("Experience", 20, y);
+            y += 10;
+            doc.setFontSize(12);
+            for (const exp of resume.experience) {
+                doc.setFont("helvetica", "bold");
+                doc.text(exp.title, 20, y);
+                y += 7;
+                doc.setFont("helvetica", "italic");
+                doc.text(`${exp.company} | ${exp.dates}`, 20, y);
+                y += 7;
+                doc.setFont("helvetica", "normal");
+                const descLines = doc.splitTextToSize(exp.description, 170);
+                doc.text(descLines, 20, y);
+                y += descLines.length * 5 + 5;
+            }
+        }
+
+        // Projects
+        if (resume.sections.projects.enabled) {
+            doc.setFontSize(14);
+            doc.text("Projects", 20, y);
+            y += 10;
+            doc.setFontSize(12);
+            for (const proj of resume.projects) {
+                doc.setFont("helvetica", "bold");
+                doc.text(proj.name, 20, y);
+                y += 7;
+                doc.setFont("helvetica", "normal");
+                const descLines = doc.splitTextToSize(proj.description, 170);
+                doc.text(descLines, 20, y);
+                y += descLines.length * 5;
+                if (proj.github) {
+                    doc.text(`GitHub: ${proj.github}`, 20, y);
+                    y += 5;
+                }
+                if (proj.demo) {
+                    doc.text(`Demo: ${proj.demo}`, 20, y);
+                    y += 5;
+                }
+                y += 5;
+            }
+        }
+
+        // Skills
+        if (resume.sections.skills.enabled) {
+            doc.setFontSize(14);
+            doc.text("Skills", 20, y);
+            y += 10;
+            doc.setFontSize(12);
+            for (const category in resume.skills) {
+                if (resume.sections.skills.categories[category]) {
+                    doc.setFont("helvetica", "bold");
+                    doc.text(resume.sections.skills.categories[category], 20, y);
+                    y += 7;
+                    doc.setFont("helvetica", "normal");
+                    doc.text(resume.skills[category].join(", "), 20, y);
+                    y += 10;
+                }
+            }
+        }
+
+        // Education
+        if (resume.sections.education.enabled) {
+            doc.setFontSize(14);
+            doc.text("Education", 20, y);
+            y += 10;
+            doc.setFontSize(12);
+            for (const edu of resume.education) {
+                doc.setFont("helvetica", "bold");
+                doc.text(edu.degree, 20, y);
+                y += 7;
+                doc.setFont("helvetica", "italic");
+                doc.text(`${edu.university} | ${edu.dates}`, 20, y);
+                y += 7;
+                if (edu.coursework) {
+                    doc.setFont("helvetica", "normal");
+                    doc.text(`Relevant Coursework: ${edu.coursework.join(", ")}`, 20, y);
+                    y += 10;
+                }
+            }
+        }
+
+        doc.save('resume.pdf');
 
         terminal.writeln("PDF download started.");
     } catch (error) {

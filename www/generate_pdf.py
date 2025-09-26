@@ -1,5 +1,5 @@
 import json
-from fpdf import FPDF
+from fpdf2 import FPDF
 
 def create_pdf(resume_data_str):
     resume = json.loads(resume_data_str)
