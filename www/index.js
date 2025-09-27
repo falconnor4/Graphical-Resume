@@ -433,125 +433,157 @@ window.addEventListener('resize', fitTerminal);
 
 
 async function downloadResumeAsPdf() {
-    terminal.writeln("Generating PDF... this may take a moment.");
+    terminal.writeln("Generating balanced single-page PDF...");
 
     try {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+        const doc = new jsPDF('p', 'pt', 'a4');
 
-        const resumeResponse = await fetch('./resume.json');
+        const resumeResponse = await fetch('./resume.json?t=' + Date.now());
         const resume = await resumeResponse.json();
 
-        // Set font
-        doc.setFont("helvetica");
+        // --- Constants (Balanced B&W) ---
+        const TEXT_COLOR = '#000000';
+        const MARGIN = 40;
+        const PAGE_WIDTH = doc.internal.pageSize.getWidth();
+        const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 
-        // Title
-        doc.setFontSize(16);
-        doc.text(resume.contact.name, 105, 20, { align: 'center' });
-        doc.setFontSize(12);
-        doc.text(resume.contact.title, 105, 30, { align: 'center' });
-        doc.text(`${resume.contact.email} | ${resume.contact.location}`, 105, 40, { align: 'center' });
+        let y = 0;
+        
+        // --- Header ---
+        y = MARGIN;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(24);
+        doc.setTextColor(TEXT_COLOR);
+        doc.text(resume.contact.name, PAGE_WIDTH / 2, y, { align: 'center' });
+        y += 24;
 
-        let y = 60;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        doc.text(resume.contact.title, PAGE_WIDTH / 2, y, { align: 'center' });
+        y += 16;
 
-        // Summary
-        if (resume.sections.summary.enabled) {
-            doc.setFontSize(14);
-            doc.text("Summary", 20, y);
-            y += 10;
+        doc.setFontSize(10);
+        const contactInfo = [resume.contact.email, resume.contact.phone, resume.contact.github, resume.contact.location].filter(Boolean).join('  •  ');
+        doc.text(contactInfo, PAGE_WIDTH / 2, y, { align: 'center' });
+        y += 22;
+
+        doc.setDrawColor(TEXT_COLOR);
+        doc.setLineWidth(0.7);
+        doc.line(MARGIN, y, PAGE_WIDTH - MARGIN, y);
+        y += 22;
+
+        // --- Section Helper ---
+        const drawSection = (title, body) => {
+            doc.setFont('helvetica', 'bold');
             doc.setFontSize(12);
-            const summaryLines = doc.splitTextToSize(resume.summary, 170);
-            doc.text(summaryLines, 20, y);
-            y += summaryLines.length * 5 + 10;
+            doc.text(title.toUpperCase(), MARGIN, y);
+            y += 15;
+            body();
+            y += 15;
+        };
+
+        // --- Summary ---
+        if (resume.sections.summary && resume.sections.summary.enabled) {
+            drawSection(resume.sections.summary.title, () => {
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                const summaryLines = doc.splitTextToSize(resume.summary, CONTENT_WIDTH);
+                doc.text(summaryLines, MARGIN, y);
+                y += summaryLines.length * 12;
+            });
         }
 
-        // Experience
-        if (resume.sections.experience.enabled) {
-            doc.setFontSize(14);
-            doc.text("Experience", 20, y);
-            y += 10;
-            doc.setFontSize(12);
-            for (const exp of resume.experience) {
-                doc.setFont("helvetica", "bold");
-                doc.text(exp.title, 20, y);
-                y += 7;
-                doc.setFont("helvetica", "italic");
-                doc.text(`${exp.company} | ${exp.dates}`, 20, y);
-                y += 7;
-                doc.setFont("helvetica", "normal");
-                const descLines = doc.splitTextToSize(exp.description, 170);
-                doc.text(descLines, 20, y);
-                y += descLines.length * 5 + 5;
-            }
+        // --- Experience ---
+        if (resume.sections.experience && resume.sections.experience.enabled) {
+            drawSection(resume.sections.experience.title, () => {
+                resume.experience.forEach(exp => {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(10.5);
+                    doc.text(exp.title, MARGIN, y);
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(exp.dates, CONTENT_WIDTH + MARGIN, y, { align: 'right' });
+                    y += 13;
+
+                    doc.setFont('helvetica', 'italic');
+                    doc.setFontSize(10);
+                    doc.text(exp.company, MARGIN, y);
+                    y += 13;
+
+                    doc.setFont('helvetica', 'normal');
+                    const descLines = doc.splitTextToSize(exp.description, CONTENT_WIDTH);
+                    doc.text(descLines, MARGIN, y);
+                    y += descLines.length * 12 + 8;
+                });
+            });
         }
 
-        // Projects
-        if (resume.sections.projects.enabled) {
-            doc.setFontSize(14);
-            doc.text("Projects", 20, y);
-            y += 10;
-            doc.setFontSize(12);
-            for (const proj of resume.projects) {
-                doc.setFont("helvetica", "bold");
-                doc.text(proj.name, 20, y);
-                y += 7;
-                doc.setFont("helvetica", "normal");
-                const descLines = doc.splitTextToSize(proj.description, 170);
-                doc.text(descLines, 20, y);
-                y += descLines.length * 5;
-                if (proj.github) {
-                    doc.text(`GitHub: ${proj.github}`, 20, y);
-                    y += 5;
+        // --- Projects ---
+        if (resume.sections.projects && resume.sections.projects.enabled) {
+            drawSection(resume.sections.projects.title, () => {
+                resume.projects.forEach(proj => {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(10.5);
+                    doc.text(proj.name, MARGIN, y);
+                    y += 13;
+
+                    doc.setFont('helvetica', 'normal');
+                    const descLines = doc.splitTextToSize(proj.description, CONTENT_WIDTH);
+                    doc.text(descLines, MARGIN, y);
+                    y += descLines.length * 12;
+
+                    if (proj.github) {
+                        doc.textWithLink(`GitHub: ${proj.github}`, MARGIN, y, { url: `https://${proj.github}` });
+                        y += 12;
+                    }
+                    y += 8;
+                });
+            });
+        }
+
+        // --- Skills ---
+        if (resume.sections.skills && resume.sections.skills.enabled) {
+            drawSection(resume.sections.skills.title, () => {
+                for (const category in resume.skills) {
+                    if (resume.sections.skills.categories[category] && resume.skills[category].length > 0) {
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(10.5);
+                        doc.text(resume.sections.skills.categories[category], MARGIN, y);
+                        y += 13;
+
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(10);
+                        const skillsString = resume.skills[category].join('  •  ');
+                        const skillLines = doc.splitTextToSize(skillsString, CONTENT_WIDTH);
+                        doc.text(skillLines, MARGIN, y);
+                        y += skillLines.length * 12 + 8;
+                    }
                 }
-                if (proj.demo) {
-                    doc.text(`Demo: ${proj.demo}`, 20, y);
-                    y += 5;
-                }
-                y += 5;
-            }
+            });
         }
 
-        // Skills
-        if (resume.sections.skills.enabled) {
-            doc.setFontSize(14);
-            doc.text("Skills", 20, y);
-            y += 10;
-            doc.setFontSize(12);
-            for (const category in resume.skills) {
-                if (resume.sections.skills.categories[category]) {
-                    doc.setFont("helvetica", "bold");
-                    doc.text(resume.sections.skills.categories[category], 20, y);
-                    y += 7;
-                    doc.setFont("helvetica", "normal");
-                    doc.text(resume.skills[category].join(", "), 20, y);
-                    y += 10;
-                }
-            }
+        // --- Education ---
+        if (resume.sections.education && resume.sections.education.enabled) {
+            drawSection(resume.sections.education.title, () => {
+                resume.education.forEach(edu => {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(10.5);
+                    doc.text(edu.degree, MARGIN, y);
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(edu.dates, CONTENT_WIDTH + MARGIN, y, { align: 'right' });
+                    y += 13;
+
+                    doc.setFont('helvetica', 'italic');
+                    doc.setFontSize(10);
+                    doc.text(edu.university, MARGIN, y);
+                    y += 13;
+                });
+            });
         }
 
-        // Education
-        if (resume.sections.education.enabled) {
-            doc.setFontSize(14);
-            doc.text("Education", 20, y);
-            y += 10;
-            doc.setFontSize(12);
-            for (const edu of resume.education) {
-                doc.setFont("helvetica", "bold");
-                doc.text(edu.degree, 20, y);
-                y += 7;
-                doc.setFont("helvetica", "italic");
-                doc.text(`${edu.university} | ${edu.dates}`, 20, y);
-                y += 7;
-                if (edu.coursework) {
-                    doc.setFont("helvetica", "normal");
-                    doc.text(`Relevant Coursework: ${edu.coursework.join(", ")}`, 20, y);
-                    y += 10;
-                }
-            }
-        }
-
-        doc.save('resume.pdf');
-
+        doc.save('resume_one_page.pdf');
         terminal.writeln("PDF download started.");
     } catch (error) {
         terminal.writeln(`Error generating PDF: ${error.message}`);
