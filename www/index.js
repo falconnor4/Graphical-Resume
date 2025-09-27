@@ -31,7 +31,7 @@ async function loadResumeContent() {
             sectionsHTML += `
                 <div class="section">
                     <div class="section-title">
-                        <span>${sections.summary.icon}</span> ${sections.summary.title}
+                        ${sections.summary.title}
                     </div>
                     <p style="font-size: 1.1em; color: var(--text-muted); line-height: 1.7;">${resume.summary}</p>
                 </div>
@@ -46,7 +46,7 @@ async function loadResumeContent() {
             sectionsHTML += `
                 <div class="section">
                     <div class="section-title">
-                        <span>${sections.experience.icon}</span> ${sections.experience.title}
+                        ${sections.experience.title}
                     </div>
                     ${visibleExperiences.map(exp => `
                         <div class="experience-item">
@@ -90,7 +90,7 @@ async function loadResumeContent() {
             sectionsHTML += `
                 <div class="section">
                     <div class="section-title">
-                        <span>${sections.projects.icon}</span> ${sections.projects.title}
+                        ${sections.projects.title}
                     </div>
                     ${visibleProjects.map(proj => `
                         <div class="project-item">
@@ -161,7 +161,7 @@ async function loadResumeContent() {
                 sectionsHTML += `
                     <div class="section">
                         <div class="section-title">
-                            <span>${sections.skills.icon}</span> ${sections.skills.title}
+                            ${sections.skills.title}
                         </div>
                         <div class="skills-grid">
                             ${skillCategories}
@@ -176,7 +176,7 @@ async function loadResumeContent() {
             sectionsHTML += `
                 <div class="section">
                     <div class="section-title">
-                        <span>${sections.education.icon}</span> ${sections.education.title}
+                        ${sections.education.title}
                     </div>
                     ${resume.education.map(edu => `
                         <div class="experience-item">
