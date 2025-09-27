@@ -99,13 +99,17 @@ async function loadResumeContent() {
                             <div class="tech-tags">
                                 ${proj.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
                             </div>
-                            ${proj.github || proj.demo ? `
+                            ${proj.gallery_link ? `
+                                <div style="margin-top: 1rem;">
+                                    <a href="${proj.gallery_link}" class="contact-item">${proj.gallery_text || 'View Gallery →'}</a>
+                                </div>
+                            ` : (proj.github || proj.demo ? `
                                 <div style="margin-top: 1rem;">
                                     ${proj.github ? `<a href="https://${proj.github}" target="_blank" class="contact-item">GitHub →</a>` : ''}
                                     ${proj.github && proj.demo ? ' • ' : ''}
                                     ${proj.demo ? `<a href="https://${proj.demo}" target="_blank" class="contact-item">Demo →</a>` : ''}
                                 </div>
-                            ` : ''}
+                            ` : '')}
                         </div>
                     `).join('')}
                     ${hiddenProjects.length > 0 ? `
@@ -122,13 +126,17 @@ async function loadResumeContent() {
                                         <div class="tech-tags">
                                             ${proj.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
                                         </div>
-                                        ${proj.github || proj.demo ? `
+                                        ${proj.gallery_link ? `
+                                            <div style="margin-top: 1rem;">
+                                                <a href="${proj.gallery_link}" class="contact-item">${proj.gallery_text || 'View Gallery →'}</a>
+                                            </div>
+                                        ` : (proj.github || proj.demo ? `
                                             <div style="margin-top: 1rem;">
                                                 ${proj.github ? `<a href="https://${proj.github}" target="_blank" class="contact-item">GitHub →</a>` : ''}
                                                 ${proj.github && proj.demo ? ' • ' : ''}
                                                 ${proj.demo ? `<a href="https://${proj.demo}" target="_blank" class="contact-item">Demo →</a>` : ''}
                                             </div>
-                                        ` : ''}
+                                        ` : '')}
                                     </div>
                                 `).join('')}
                             </div>

@@ -1,0 +1,20 @@
+[
+  {
+    "type": "image",
+    "src": "gallery_media/art-gallary.jpg",
+    "title": "Vancouver Art Gallery Installation",
+    "description": "In front of my interactive media installation at the Vancouver Art Gallery."
+  },
+  {
+    "type": "video",
+    "src": "gallery_media/Console-Mud.mp4",
+    "title": "Console MUD",
+    "description": "A 3D game engine that renders in the terminal."
+  },
+  {
+    "type": "image",
+    "src": "gallery_media/hybrid-gs.png",
+    "title": "Hybrid Gaussian Splatting Engine",
+    "description": "A game engine utilizing hybrid Gaussian splatting for rendering."
+  }
+]

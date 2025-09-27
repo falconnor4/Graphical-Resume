@@ -136,11 +136,12 @@
         "Unreal Engine",
         "GLSL"
       ],
-      "github": "github.com/falconnor4"
+      "gallery_link": "gallery.html",
+      "gallery_text": "View Gallery →"
     },
     {
       "name": "Vancouver Art Gallery Installation",
-      "description": "Provided vector processing services to support the development and construction of an interactive media installation for the Vancouver Art Gallery.",
+      "description": "Collaborated with the Vancouver Art Gallery on an interactive media installation, providing crucial vector processing expertise to bring the digital art piece to life.",
       "technologies": [
         "Vector Processing",
         "Interactive Media",
