@@ -167,11 +167,13 @@ impl State {
                 vertex: wgpu::VertexState {
                     module: &vs_module,
                     entry_point: "main",
+                    compilation_options: wgpu::PipelineCompilationOptions::default(),
                     buffers: &[],
                 },
                 fragment: Some(wgpu::FragmentState {
                     module: &fs_module,
                     entry_point: "main",
+                    compilation_options: wgpu::PipelineCompilationOptions::default(),
                     targets: &[Some(wgpu::ColorTargetState {
                         format: config.format,
                         blend: Some(wgpu::BlendState::REPLACE),
